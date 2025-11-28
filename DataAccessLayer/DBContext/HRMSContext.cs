@@ -21,15 +21,41 @@ public partial class HRMSContext : DbContext
 
     public virtual DbSet<AttendanceStatus> AttendanceStatuses { get; set; }
 
+    public virtual DbSet<AuditLog> AuditLogs { get; set; }
+
+    public virtual DbSet<AuditLogDetail> AuditLogDetails { get; set; }
+
     public virtual DbSet<BloodGroup> BloodGroups { get; set; }
 
     public virtual DbSet<CertificationType> CertificationTypes { get; set; }
+
+    public virtual DbSet<CertificationType1> CertificationTypes1 { get; set; }
 
     public virtual DbSet<Company> Companies { get; set; }
 
     public virtual DbSet<Department> Departments { get; set; }
 
     public virtual DbSet<Designation> Designations { get; set; }
+
+    public virtual DbSet<DocumentType> DocumentTypes { get; set; }
+
+    public virtual DbSet<EmployeeCertification> EmployeeCertifications { get; set; }
+
+    public virtual DbSet<EmployeeEducation> EmployeeEducations { get; set; }
+
+    public virtual DbSet<EmployeeEmergencyContact> EmployeeEmergencyContacts { get; set; }
+
+    public virtual DbSet<EmployeeFamilyDetail> EmployeeFamilyDetails { get; set; }
+
+    public virtual DbSet<EmployeeForm> EmployeeForms { get; set; }
+
+    public virtual DbSet<EmployeeImmigration> EmployeeImmigrations { get; set; }
+
+    public virtual DbSet<EmployeeJobHistory> EmployeeJobHistories { get; set; }
+
+    public virtual DbSet<EmployeeResignation> EmployeeResignations { get; set; }
+
+    public virtual DbSet<ExceptionLog> ExceptionLogs { get; set; }
 
     public virtual DbSet<ExpenseCategoryType> ExpenseCategoryTypes { get; set; }
 
@@ -51,6 +77,8 @@ public partial class HRMSContext : DbContext
 
     public virtual DbSet<MenuRoleMaster> MenuRoleMasters { get; set; }
 
+    public virtual DbSet<ModeOfStudy> ModeOfStudies { get; set; }
+
     public virtual DbSet<PolicyCategory> PolicyCategories { get; set; }
 
     public virtual DbSet<ProjectStatus> ProjectStatuses { get; set; }
@@ -63,15 +91,19 @@ public partial class HRMSContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<VisaTypeMaster> VisaTypeMasters { get; set; }
+
+    public virtual DbSet<WorkAuthStatusMaster> WorkAuthStatusMasters { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseSqlServer("Server=localhost;Database=HRMS;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
+        => optionsBuilder.UseSqlServer("Server=192.168.29.53,49792;Database=HRMS_DEV_New;user id= sa; password= C0rtr@ck3r@2024@0124; TrustServerCertificate=True;MultipleActiveResultSets=true;");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<AssetStatus>(entity =>
         {
-            entity.HasKey(e => e.AssetStatusId).HasName("PK__AssetSta__E63EE4F64FA601BE");
+            entity.HasKey(e => e.AssetStatusId).HasName("PK__AssetSta__E63EE4F627ED063F");
 
             entity.ToTable("AssetStatus", "adminmaster");
 
@@ -103,7 +135,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<AttachmentType>(entity =>
         {
-            entity.HasKey(e => e.AttachmentTypeId).HasName("PK__Attachme__5C63AB44E53A4935");
+            entity.HasKey(e => e.AttachmentTypeId).HasName("PK__Attachme__5C63AB44CCABF2F5");
 
             entity.ToTable("AttachmentType", "adminmaster");
 
@@ -135,7 +167,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<AttendanceStatus>(entity =>
         {
-            entity.HasKey(e => e.AttendanceStatusId).HasName("PK__Attendan__7696A715C0219EAB");
+            entity.HasKey(e => e.AttendanceStatusId).HasName("PK__Attendan__7696A715BBD41E93");
 
             entity.ToTable("AttendanceStatus", "adminmaster");
 
@@ -165,9 +197,49 @@ public partial class HRMSContext : DbContext
                 .HasConstraintName("FK_AttendanceStatus_Region");
         });
 
+        modelBuilder.Entity<AuditLog>(entity =>
+        {
+            entity.HasKey(e => e.AuditLogId).HasName("PK__AuditLog__EB5F6CDD99D564A9");
+
+            entity.ToTable("AuditLog", "Users");
+
+            entity.Property(e => e.AuditLogId).HasColumnName("AuditLogID");
+            entity.Property(e => e.ActionType).HasMaxLength(50);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Device).HasMaxLength(100);
+            entity.Property(e => e.Ipaddress)
+                .HasMaxLength(50)
+                .HasColumnName("IPAddress");
+            entity.Property(e => e.RecordId)
+                .HasMaxLength(150)
+                .HasColumnName("RecordID");
+            entity.Property(e => e.Remarks).HasMaxLength(255);
+            entity.Property(e => e.TableName).HasMaxLength(150);
+            entity.Property(e => e.UserId).HasColumnName("UserID");
+            entity.Property(e => e.UserName).HasMaxLength(150);
+        });
+
+        modelBuilder.Entity<AuditLogDetail>(entity =>
+        {
+            entity.HasKey(e => e.AuditLogDetailId).HasName("PK__AuditLog__A5C56C58E8407311");
+
+            entity.ToTable("AuditLogDetail", "Users");
+
+            entity.Property(e => e.AuditLogDetailId).HasColumnName("AuditLogDetailID");
+            entity.Property(e => e.AuditLogId).HasColumnName("AuditLogID");
+            entity.Property(e => e.ColumnName).HasMaxLength(150);
+
+            entity.HasOne(d => d.AuditLog).WithMany(p => p.AuditLogDetails)
+                .HasForeignKey(d => d.AuditLogId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__AuditLogD__Audit__3E52440B");
+        });
+
         modelBuilder.Entity<BloodGroup>(entity =>
         {
-            entity.HasKey(e => e.BloodGroupId).HasName("PK__BloodGro__4398C6AFE243E76A");
+            entity.HasKey(e => e.BloodGroupId).HasName("PK__BloodGro__4398C6AF65F225C9");
 
             entity.ToTable("BloodGroup", "adminmaster");
 
@@ -199,7 +271,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<CertificationType>(entity =>
         {
-            entity.HasKey(e => e.CertificationTypeId).HasName("PK__Certific__D1A09661120C7BF6");
+            entity.HasKey(e => e.CertificationTypeId).HasName("PK__Certific__D1A096610FDB78B2");
 
             entity.ToTable("CertificationType", "adminmaster");
 
@@ -229,13 +301,38 @@ public partial class HRMSContext : DbContext
                 .HasConstraintName("FK_CertificationType_Region");
         });
 
+        modelBuilder.Entity<CertificationType1>(entity =>
+        {
+            entity.HasKey(e => e.CertificationTypeId).HasName("PK__Certific__D1A0964150314D76");
+
+            entity.ToTable("CertificationTypes", "adminmaster");
+
+            entity.HasIndex(e => e.CertificationTypeName, "UQ__Certific__A329BCE67C4BC749").IsUnique();
+
+            entity.Property(e => e.CertificationTypeName)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.CompanyId)
+                .HasDefaultValue(1)
+                .HasColumnName("CompanyID");
+            entity.Property(e => e.CreatedBy).HasDefaultValue(1);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+            entity.Property(e => e.RegionId)
+                .HasDefaultValue(1)
+                .HasColumnName("RegionID");
+        });
+
         modelBuilder.Entity<Company>(entity =>
         {
-            entity.HasKey(e => e.CompanyId).HasName("PK__Company__2D971C4CF62B9876");
+            entity.HasKey(e => e.CompanyId).HasName("PK__Company__2D971C4C296D6283");
 
             entity.ToTable("Company", "UM");
 
-            entity.HasIndex(e => e.CompanyCode, "UQ__Company__11A0134BA759E02B").IsUnique();
+            entity.HasIndex(e => e.CompanyCode, "UQ__Company__11A0134B92AF4524").IsUnique();
 
             entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
             entity.Property(e => e.CompanyCode)
@@ -259,7 +356,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<Department>(entity =>
         {
-            entity.HasKey(e => e.DepartmentId).HasName("PK__Departme__B2079BCD20CFD8AE");
+            entity.HasKey(e => e.DepartmentId).HasName("PK__Departme__B2079BCDEC2CE43B");
 
             entity.ToTable("Department", "adminmaster");
 
@@ -288,7 +385,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<Designation>(entity =>
         {
-            entity.HasKey(e => e.DesignationId).HasName("PK__Designat__BABD603EBEFD21D6");
+            entity.HasKey(e => e.DesignationId).HasName("PK__Designat__BABD603E0D3379A3");
 
             entity.ToTable("Designation", "adminmaster");
 
@@ -318,9 +415,251 @@ public partial class HRMSContext : DbContext
                 .HasConstraintName("FK_Designation_Region");
         });
 
+        modelBuilder.Entity<DocumentType>(entity =>
+        {
+            entity.ToTable("DocumentType", "adminmaster");
+
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Description)
+                .HasMaxLength(300)
+                .IsUnicode(false);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.ModifiedAt).HasColumnType("datetime");
+            entity.Property(e => e.RegionId).HasColumnName("RegionID");
+            entity.Property(e => e.TypeName).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<EmployeeCertification>(entity =>
+        {
+            entity.HasKey(e => e.CertificationId).HasName("PK__Employee__1237E58A515E1DEE");
+
+            entity.ToTable("EmployeeCertifications", "employee");
+
+            entity.Property(e => e.CertificationName)
+                .HasMaxLength(200)
+                .IsUnicode(false);
+            entity.Property(e => e.CertificationType)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Description)
+                .HasMaxLength(500)
+                .IsUnicode(false);
+            entity.Property(e => e.DocumentPath)
+                .HasMaxLength(500)
+                .IsUnicode(false);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+        });
+
+        modelBuilder.Entity<EmployeeEducation>(entity =>
+        {
+            entity.HasKey(e => e.EducationId).HasName("PK__Employee__4BBE3805132A64C8");
+
+            entity.ToTable("EmployeeEducation", "employee");
+
+            entity.Property(e => e.Board)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.CertificateFilePath)
+                .HasMaxLength(255)
+                .IsUnicode(false);
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.Institution)
+                .HasMaxLength(200)
+                .IsUnicode(false);
+            entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+            entity.Property(e => e.Qualification)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.RegionId).HasColumnName("RegionID");
+            entity.Property(e => e.Result)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.Specialization)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.UserId).HasDefaultValue(1);
+
+            entity.HasOne(d => d.ModeOfStudy).WithMany(p => p.EmployeeEducations)
+                .HasForeignKey(d => d.ModeOfStudyId)
+                .HasConstraintName("FK_EmployeeEducation_ModeOfStudyId");
+        });
+
+        modelBuilder.Entity<EmployeeEmergencyContact>(entity =>
+        {
+            entity.HasKey(e => e.EmergencyContactId).HasName("PK__Employee__E8A61DAE7E911740");
+
+            entity.ToTable("EmployeeEmergencyContact", "employee");
+
+            entity.Property(e => e.EmergencyContactId).HasColumnName("EmergencyContactID");
+            entity.Property(e => e.Address).HasMaxLength(250);
+            entity.Property(e => e.AlternatePhone).HasMaxLength(20);
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.ContactName).HasMaxLength(150);
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Email).HasMaxLength(150);
+            entity.Property(e => e.EmployeeId).HasColumnName("EmployeeID");
+            entity.Property(e => e.ModifiedBy).HasMaxLength(100);
+            entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+            entity.Property(e => e.PhoneNumber).HasMaxLength(20);
+            entity.Property(e => e.RegionId).HasColumnName("RegionID");
+            entity.Property(e => e.Relationship).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<EmployeeFamilyDetail>(entity =>
+        {
+            entity.HasKey(e => e.FamilyId).HasName("PK__Employee__41D82F6B6D6334F4");
+
+            entity.ToTable("EmployeeFamilyDetails", "employee");
+
+            entity.Property(e => e.Address).HasMaxLength(250);
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.Gender).HasMaxLength(20);
+            entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+            entity.Property(e => e.Name).HasMaxLength(100);
+            entity.Property(e => e.Occupation).HasMaxLength(50);
+            entity.Property(e => e.Phone).HasMaxLength(15);
+            entity.Property(e => e.RegionId).HasColumnName("RegionID");
+            entity.Property(e => e.Relationship).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<EmployeeForm>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Employee__3214EC074B7E7D8E");
+
+            entity.ToTable("EmployeeForms", "employee");
+
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.DocumentName).HasMaxLength(100);
+            entity.Property(e => e.EmployeeCode).HasMaxLength(50);
+            entity.Property(e => e.FileName).HasMaxLength(255);
+            entity.Property(e => e.FilePath).HasMaxLength(500);
+            entity.Property(e => e.ModifiedAt).HasColumnType("datetime");
+            entity.Property(e => e.Remarks).HasMaxLength(500);
+
+            entity.HasOne(d => d.DocumentType).WithMany(p => p.EmployeeForms)
+                .HasForeignKey(d => d.DocumentTypeId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_EmployeeForms_DocumentType");
+        });
+
+        modelBuilder.Entity<EmployeeImmigration>(entity =>
+        {
+            entity.HasKey(e => e.ImmigrationId).HasName("PK__Employee__A69E9F8398C76C20");
+
+            entity.ToTable("EmployeeImmigration", "employee");
+
+            entity.Property(e => e.ImmigrationId).HasColumnName("ImmigrationID");
+            entity.Property(e => e.ContactPerson).HasMaxLength(150);
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.EmployerAddress).HasMaxLength(250);
+            entity.Property(e => e.EmployerContact).HasMaxLength(100);
+            entity.Property(e => e.EmployerName).HasMaxLength(150);
+            entity.Property(e => e.FullName).HasMaxLength(150);
+            entity.Property(e => e.ModifiedBy).HasMaxLength(100);
+            entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+            entity.Property(e => e.Nationality).HasMaxLength(100);
+            entity.Property(e => e.OtherDocumentsPath).HasMaxLength(255);
+            entity.Property(e => e.PassportCopyPath).HasMaxLength(255);
+            entity.Property(e => e.PassportNumber).HasMaxLength(50);
+            entity.Property(e => e.StatusId).HasColumnName("StatusID");
+            entity.Property(e => e.VisaCopyPath).HasMaxLength(255);
+            entity.Property(e => e.VisaIssuingCountry).HasMaxLength(100);
+            entity.Property(e => e.VisaNumber).HasMaxLength(50);
+            entity.Property(e => e.VisaTypeId).HasColumnName("VisaTypeID");
+        });
+
+        modelBuilder.Entity<EmployeeJobHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Employee__3214EC0759C82621");
+
+            entity.ToTable("EmployeeJobHistory", "employee");
+
+            entity.Property(e => e.CompanyId).HasColumnName("CompanyID");
+            entity.Property(e => e.CreatedAt).HasColumnType("datetime");
+            entity.Property(e => e.EmployeeCode)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.Employer)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+            entity.Property(e => e.JobTitle)
+                .HasMaxLength(100)
+                .IsUnicode(false);
+            entity.Property(e => e.LastCtc)
+                .HasColumnType("decimal(18, 2)")
+                .HasColumnName("LastCTC");
+            entity.Property(e => e.ReasonForLeaving)
+                .HasMaxLength(500)
+                .IsUnicode(false);
+            entity.Property(e => e.RegionId).HasColumnName("RegionID");
+            entity.Property(e => e.UpdatedAt).HasColumnType("datetime");
+            entity.Property(e => e.UploadDocument)
+                .HasMaxLength(300)
+                .IsUnicode(false);
+            entity.Property(e => e.Website)
+                .HasMaxLength(150)
+                .IsUnicode(false);
+        });
+
+        modelBuilder.Entity<EmployeeResignation>(entity =>
+        {
+            entity.HasKey(e => e.ResignationId).HasName("PK__HrdEmpRe__CD4E6DB5191F72A0");
+
+            entity.ToTable("EmployeeResignation", "employee");
+
+            entity.Property(e => e.EmployeeId)
+      .HasMaxLength(50);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.ModifiedAt).HasColumnType("datetime");
+            entity.Property(e => e.ModifiedBy).HasMaxLength(100);
+            entity.Property(e => e.NoticePeriod).HasMaxLength(50);
+            entity.Property(e => e.ResignationType).HasMaxLength(100);
+            entity.Property(e => e.Status)
+                .HasMaxLength(50)
+                .HasDefaultValue("Pending");
+        });
+
+        modelBuilder.Entity<ExceptionLog>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Exceptio__3214EC07CCE71635");
+
+            entity.ToTable("Exception_Log", "logger");
+
+            entity.Property(e => e.ActionName).HasMaxLength(150);
+            entity.Property(e => e.BrowserInfo).HasMaxLength(500);
+            entity.Property(e => e.ClientIp)
+                .HasMaxLength(50)
+                .HasColumnName("ClientIP");
+            entity.Property(e => e.ControllerName).HasMaxLength(150);
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.ErrorCode).HasMaxLength(50);
+            entity.Property(e => e.ErrorType).HasMaxLength(100);
+            entity.Property(e => e.HostName).HasMaxLength(150);
+            entity.Property(e => e.RequestPath).HasMaxLength(500);
+            entity.Property(e => e.UserId).HasMaxLength(100);
+        });
+
         modelBuilder.Entity<ExpenseCategoryType>(entity =>
         {
-            entity.HasKey(e => e.ExpenseCategoryTypeId).HasName("PK__ExpenseC__CB9B6F4B7A598CB9");
+            entity.HasKey(e => e.ExpenseCategoryTypeId).HasName("PK__ExpenseC__CB9B6F4BD9291FCF");
 
             entity.ToTable("ExpenseCategoryType", "adminmaster");
 
@@ -352,7 +691,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<ExpenseStatus>(entity =>
         {
-            entity.HasKey(e => e.ExpenseStatusId).HasName("PK__ExpenseS__A8E82F40BB773E4F");
+            entity.HasKey(e => e.ExpenseStatusId).HasName("PK__ExpenseS__A8E82F40F02A2F64");
 
             entity.ToTable("ExpenseStatus", "adminmaster");
 
@@ -384,7 +723,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<Gender>(entity =>
         {
-            entity.HasKey(e => e.GenderId).HasName("PK__Gender__4E24E81772EA97CB");
+            entity.HasKey(e => e.GenderId).HasName("PK__Gender__4E24E817E1D517A8");
 
             entity.ToTable("Gender", "adminmaster");
 
@@ -416,7 +755,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<HelpDeskCategory>(entity =>
         {
-            entity.HasKey(e => e.HelpDeskCategoryId).HasName("PK__HelpDesk__9F01054031BA1E57");
+            entity.HasKey(e => e.HelpDeskCategoryId).HasName("PK__HelpDesk__9F010540011F761C");
 
             entity.ToTable("HelpDeskCategory", "adminmaster");
 
@@ -448,7 +787,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<KpiCategory>(entity =>
         {
-            entity.HasKey(e => e.KpiCategoryId).HasName("PK__KpiCateg__B31BD9B89AAA7A94");
+            entity.HasKey(e => e.KpiCategoryId).HasName("PK__KpiCateg__B31BD9B88B954E34");
 
             entity.ToTable("KpiCategory", "adminmaster");
 
@@ -480,7 +819,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<LeaveStatus>(entity =>
         {
-            entity.HasKey(e => e.LeaveStatusId).HasName("PK__LeaveSta__75EE81DA2AE7701C");
+            entity.HasKey(e => e.LeaveStatusId).HasName("PK__LeaveSta__75EE81DA7012012A");
 
             entity.ToTable("LeaveStatus", "adminmaster");
 
@@ -512,7 +851,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<LeaveType>(entity =>
         {
-            entity.HasKey(e => e.LeaveTypeId).HasName("PK__LeaveTyp__43BE8FF4AE1EE281");
+            entity.HasKey(e => e.LeaveTypeId).HasName("PK__LeaveTyp__43BE8FF4F861D38F");
 
             entity.ToTable("LeaveType", "adminmaster");
 
@@ -544,7 +883,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<MaritalStatus>(entity =>
         {
-            entity.HasKey(e => e.MaritalStatusId).HasName("PK__MaritalS__C8B1BA52B26768FF");
+            entity.HasKey(e => e.MaritalStatusId).HasName("PK__MaritalS__C8B1BA52D3B9D987");
 
             entity.ToTable("MaritalStatus", "adminmaster");
 
@@ -576,7 +915,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<MenuMaster>(entity =>
         {
-            entity.HasKey(e => e.MenuId).HasName("PK__MenuMast__C99ED2507761B4BD");
+            entity.HasKey(e => e.MenuId).HasName("PK__MenuMast__C99ED250D59F0C68");
 
             entity.ToTable("MenuMaster", "UM");
 
@@ -594,7 +933,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<MenuRoleMaster>(entity =>
         {
-            entity.HasKey(e => e.MenuRoleId).HasName("PK__MenuRole__880F2CC1D6DB593A");
+            entity.HasKey(e => e.MenuRoleId).HasName("PK__MenuRole__880F2CC134A69863");
 
             entity.ToTable("MenuRoleMaster", "UM");
 
@@ -627,9 +966,25 @@ public partial class HRMSContext : DbContext
                 .HasConstraintName("FK_MenuRoleMaster_Role");
         });
 
+        modelBuilder.Entity<ModeOfStudy>(entity =>
+        {
+            entity.ToTable("ModeOfStudy", "adminmaster");
+
+            entity.HasIndex(e => e.ModeName, "UQ_ModeName").IsUnique();
+
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("(getdate())")
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.ModeName)
+                .HasMaxLength(50)
+                .IsUnicode(false);
+            entity.Property(e => e.ModifiedAt).HasColumnType("datetime");
+        });
+
         modelBuilder.Entity<PolicyCategory>(entity =>
         {
-            entity.HasKey(e => e.PolicyCategoryId).HasName("PK__PolicyCa__C0F36D7DE2AA0147");
+            entity.HasKey(e => e.PolicyCategoryId).HasName("PK__PolicyCa__C0F36D7D028CE53D");
 
             entity.ToTable("PolicyCategory", "adminmaster");
 
@@ -661,7 +1016,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<ProjectStatus>(entity =>
         {
-            entity.HasKey(e => e.ProjectStatusId).HasName("PK__ProjectS__F3B67D2D740BA808");
+            entity.HasKey(e => e.ProjectStatusId).HasName("PK__ProjectS__F3B67D2D764C7432");
 
             entity.ToTable("ProjectStatus", "adminmaster");
 
@@ -693,7 +1048,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<Region>(entity =>
         {
-            entity.HasKey(e => e.RegionId).HasName("PK__Region__ACD844438DB12196");
+            entity.HasKey(e => e.RegionId).HasName("PK__Region__ACD84443831B22F0");
 
             entity.ToTable("Region", "UM");
 
@@ -713,12 +1068,12 @@ public partial class HRMSContext : DbContext
             entity.HasOne(d => d.Company).WithMany(p => p.Regions)
                 .HasForeignKey(d => d.CompanyId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK__Region__Modified__4F7CD00D");
+                .HasConstraintName("FK__Region__CompanyI__58D1301D");
         });
 
         modelBuilder.Entity<Relationship>(entity =>
         {
-            entity.HasKey(e => e.RelationshipId).HasName("PK__Relation__31FEB86145EF4598");
+            entity.HasKey(e => e.RelationshipId).HasName("PK__Relation__31FEB8617470FA77");
 
             entity.ToTable("Relationship", "adminmaster");
 
@@ -750,7 +1105,7 @@ public partial class HRMSContext : DbContext
 
         modelBuilder.Entity<RoleMaster>(entity =>
         {
-            entity.HasKey(e => e.RoleId).HasName("PK__RoleMast__8AFACE3AE0B6E87D");
+            entity.HasKey(e => e.RoleId).HasName("PK__RoleMast__8AFACE3AF14BCF7F");
 
             entity.ToTable("RoleMaster", "UM");
 
@@ -815,6 +1170,34 @@ public partial class HRMSContext : DbContext
                 .HasForeignKey(d => d.RegionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Users__RegionID__5812160E");
+        });
+
+        modelBuilder.Entity<VisaTypeMaster>(entity =>
+        {
+            entity.HasKey(e => e.VisaTypeId).HasName("PK__VisaType__9522E67949F6CC7B");
+
+            entity.ToTable("VisaTypeMaster", "adminmaster");
+
+            entity.Property(e => e.VisaTypeId).HasColumnName("VisaTypeID");
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.ModifiedBy).HasMaxLength(100);
+            entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+            entity.Property(e => e.VisaTypeName).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<WorkAuthStatusMaster>(entity =>
+        {
+            entity.HasKey(e => e.StatusId).HasName("PK__WorkAuth__C8EE2043206169DC");
+
+            entity.ToTable("WorkAuthStatusMaster", "adminmaster");
+
+            entity.Property(e => e.StatusId).HasColumnName("StatusID");
+            entity.Property(e => e.CreatedBy).HasMaxLength(100);
+            entity.Property(e => e.CreatedDate).HasColumnType("datetime");
+            entity.Property(e => e.ModifiedBy).HasMaxLength(100);
+            entity.Property(e => e.ModifiedDate).HasColumnType("datetime");
+            entity.Property(e => e.StatusName).HasMaxLength(50);
         });
 
         OnModelCreatingPartial(modelBuilder);
