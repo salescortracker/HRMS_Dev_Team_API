@@ -8,6 +8,9 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+
 
 namespace HRMS_Backend.Controllers
 {
@@ -15,14 +18,17 @@ namespace HRMS_Backend.Controllers
     [ApiController]
     public class UserManagementController : ControllerBase
     {
+        private readonly IWebHostEnvironment _env;
         private readonly ICompanyService _companyService;
         private readonly IRegionService _regionService;
         private readonly IUserService _userService;
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
+        private readonly IEmployeeImmigrationService _employeeImmigrationService;
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService
+            , IWebHostEnvironment env, IEmployeeImmigrationService employeeImmigrationService)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -30,6 +36,8 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
+            _employeeImmigrationService = employeeImmigrationService;
+            _env = env;
         }
         public class BulkInsertRequest
         {
@@ -125,7 +133,7 @@ namespace HRMS_Backend.Controllers
         /// <returns></returns>
         /// 
         [HttpDelete("DeleteCompany/{id}")]
-       
+
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _companyService.DeleteCompanyAsync(id);
@@ -195,7 +203,7 @@ namespace HRMS_Backend.Controllers
                         });
 
                     // Add more entity cases as needed
-                    
+
 
                     default:
                         return BadRequest(new { Success = false, Message = "Unsupported entity type." });
@@ -320,7 +328,7 @@ namespace HRMS_Backend.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.UserId }, createdUser);
         }
 
-      
+
 
         [HttpPut("UpdateUser/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
@@ -368,7 +376,7 @@ namespace HRMS_Backend.Controllers
         /// </summary>
         [HttpGet("GetAllMenus")]
         public async Task<IActionResult> GetAllMenus()
-       {
+        {
             var menus = await _menuService.GetAllMenusAsync();
             return Ok(menus);
         }
@@ -603,6 +611,238 @@ namespace HRMS_Backend.Controllers
                 return StatusCode(500, new { message = "An error occurred while retrieving permissions." });
             }
         }
+        #endregion
+
+        #region Immigration
+
+        [HttpGet("GetImmigration")]
+        public async Task<IActionResult> GetAllEmployeeImmigrations()
+        {
+            var result = await _employeeImmigrationService.GetAllImmigrationAsync();
+            return Ok(result);
+        }
+
+        [HttpGet("GetByIdImmigration/{id}")]
+        public async Task<IActionResult> GetEmployeeImmigrationById(int id)
+        {
+            var result = await _employeeImmigrationService.GetByIdImmigrationAsync(id);
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
+        [HttpPost("CreateImmigration")]
+        public async Task<IActionResult> CreateEmployeeImmigration(
+            [FromForm] EmployeeImmigrationDto dto,
+            IFormFile? passportCopy,
+            IFormFile? visaCopy,
+            IFormFile? otherDocs)
+        {
+            var uploadPath = Path.Combine(_env.WebRootPath, "Uploads", "immigration");
+
+
+            if (!Directory.Exists(uploadPath))
+                Directory.CreateDirectory(uploadPath);
+
+            // PASSPORT
+            if (passportCopy != null)
+            {
+                var fileName = Guid.NewGuid() + "_" + passportCopy.FileName;
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await passportCopy.CopyToAsync(stream);
+                }
+
+                dto.PassportCopyPath = fileName;
+            }
+
+            // VISA
+            if (visaCopy != null)
+            {
+                var fileName = Guid.NewGuid() + "_" + visaCopy.FileName;
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await visaCopy.CopyToAsync(stream);
+                }
+
+                dto.VisaCopyPath = fileName;
+            }
+
+            // OTHER DOCS
+            if (otherDocs != null)
+            {
+                var fileName = Guid.NewGuid() + "_" + otherDocs.FileName;
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await otherDocs.CopyToAsync(stream);
+                }
+
+                dto.OtherDocumentsPath = fileName;
+            }
+
+            var success = await _employeeImmigrationService.CreateImmigrationAsync(dto);
+
+            return success ? Ok("Inserted") : BadRequest("Failed");
+        }
+
+        [HttpPut("UpdateImmigration/{id}")]
+        public async Task<IActionResult> UpdateEmployeeImmigration(
+            int id,
+            [FromForm] EmployeeImmigrationDto dto,
+            IFormFile? passportCopy,
+            IFormFile? visaCopy,
+            IFormFile? otherDocs)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            dto.ImmigrationId = id;
+
+            var uploadPath = Path.Combine(_env.WebRootPath, "Uploads", "immigration");
+
+
+            if (!Directory.Exists(uploadPath))
+                Directory.CreateDirectory(uploadPath);
+
+            // PASSPORT
+            if (passportCopy != null)
+            {
+                var fileName = Guid.NewGuid() + "_" + passportCopy.FileName;
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await passportCopy.CopyToAsync(stream);
+                }
+
+                dto.PassportCopyPath = fileName;
+            }
+
+            // VISA
+            if (visaCopy != null)
+            {
+                var fileName = Guid.NewGuid() + "_" + visaCopy.FileName;
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await visaCopy.CopyToAsync(stream);
+                }
+
+                dto.VisaCopyPath = fileName;
+            }
+
+            // OTHER
+            if (otherDocs != null)
+            {
+                var fileName = Guid.NewGuid() + "_" + otherDocs.FileName;
+                var filePath = Path.Combine(uploadPath, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await otherDocs.CopyToAsync(stream);
+                }
+
+                dto.OtherDocumentsPath = fileName;
+            }
+
+            var success = await _employeeImmigrationService.UpdateImmigrationAsync(dto);
+
+            return success
+                ? Ok(new { message = "Updated successfully" })
+                : BadRequest(new { message = "Update failed" });
+        }
+
+        [HttpDelete("DeleteImmigration/{id}")]
+        public async Task<IActionResult> DeleteEmployeeImmigration(int id)
+        {
+            var success = await _employeeImmigrationService.DeleteImmigrationAsync(id);
+
+            return success
+                ? Ok(new { message = "Deleted successfully" })
+                : BadRequest(new { message = "Delete failed" });
+        }
+
+        [HttpGet("DownloadImmigrationFile/{id}/{fileType}")]
+        public async Task<IActionResult> DownloadImmigrationFile(int id, string fileType)
+        {
+            var data = await _employeeImmigrationService.GetByIdImmigrationAsync(id);
+            if (data == null)
+                return NotFound(new { message = "Record not found" });
+
+            string? fileName = fileType.ToLower() switch
+            {
+                "passport" => data.PassportCopyPath,
+                "visa" => data.VisaCopyPath,
+                "other" => data.OtherDocumentsPath,
+                _ => null
+            };
+
+            if (string.IsNullOrEmpty(fileName))
+                return NotFound(new { message = "File not found in database" });
+
+            return Ok(new
+            {
+                filePath = $"Uploads/immigration/{fileName}"
+            });
+        }
+
+
+
+
+        private string GetContentType(string path)
+        {
+            var extension = Path.GetExtension(path).ToLowerInvariant();
+            return extension switch
+            {
+                ".pdf" => "application/pdf",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
+                ".doc" => "application/msword",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".txt" => "text/plain",
+                _ => "application/octet-stream"
+            };
+        }
+
+        [HttpGet("GetVisaTypes")]
+        public async Task<IActionResult> GetVisaTypes()
+        {
+            var list = await _employeeImmigrationService.GetVisaTypesAsync();
+            var response = list.
+                Select(v => new
+                {
+                    visaTypeId = v.VisaTypeId,
+                    visaTypeName = v.VisaTypeName
+                })
+                .ToList();
+
+            return Ok(response);
+        }
+        [HttpGet("GetStatuses")]
+        public async Task<IActionResult> GetStatuses()
+        {
+                    var list = await _employeeImmigrationService.GetStatusListAsync();
+                    var response = list.
+                Select(s => new
+                {
+                    statusId = s.StatusId,
+                    statusName = s.StatusName
+                })
+                .ToList();
+
+            return Ok(response);
+        }
+
+
+
         #endregion
 
 

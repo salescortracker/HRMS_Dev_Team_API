@@ -34,6 +34,8 @@ builder.Services.AddScoped<IMenuRoleService, MenuRoleService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDesignationService, DesignationService>();
 
+builder.Services.AddScoped<IEmployeeImmigrationService, EmployeeImmigrationService>();
+
 builder.Services.AddScoped<IEmployeeResignationService, EmployeeResignationService>();
 
 builder.Services.AddControllers();
@@ -54,6 +56,8 @@ if (app.Environment.IsDevelopment())
 // --------------------
 app.UseCors(corsPolicyName);
 app.UseHttpsRedirection();
+app.UseStaticFiles();
+
 
 app.UseAuthorization();
 
