@@ -3,6 +3,7 @@ using BusinessLayer.Interfaces;
 using DataAccessLayer.DBContext;
 using DataAccessLayer.Repositories.GeneralRepository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<HRMSContext>(options =>
@@ -37,6 +38,13 @@ builder.Services.AddScoped<IDesignationService, DesignationService>();
 builder.Services.AddScoped<IEmployeeResignationService, EmployeeResignationService>();
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<IAccountTypeService, AccountTypeService>();
+builder.Services.AddScoped<IEmployeeFilingStatusService, EmployeeFilingStatusService>();
+builder.Services.AddScoped<IEmployeeStateService, EmployeeStateService>();
+builder.Services.AddScoped<IEmployeeBankDetailsService, EmployeeBankDetailsService>();
+builder.Services.AddScoped<IEmployeeDdlistService, EmployeeDdlistService>();
+builder.Services.AddScoped<IEmployeeW4Service, EmployeeW4Service>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -49,6 +57,20 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// ✅ Serve default wwwroot files
+app.UseStaticFiles();
+
+// ✅ Serve wwwroot/DDCopies as static files
+var ddCopiesPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "DDCopies");
+if (!Directory.Exists(ddCopiesPath))
+    Directory.CreateDirectory(ddCopiesPath);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(ddCopiesPath),
+    RequestPath = "/DDCopies"
+});
 // --------------------
 // 4️⃣ Use CORS
 // --------------------

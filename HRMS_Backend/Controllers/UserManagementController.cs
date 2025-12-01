@@ -1,6 +1,8 @@
 ﻿using BusinessLayer.DTOs;
+using BusinessLayer.Implementations;
 using BusinessLayer.Interfaces;
 using DataAccessLayer.DBContext;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -21,8 +23,18 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
+        private readonly IAccountTypeService _accountTypeService;
+        private readonly IEmployeeFilingStatusService _employeeFilingStatusService;
+        private readonly IEmployeeStateService _employeeStateService;
+        private readonly IEmployeeBankDetailsService _bankService;
+        private readonly IEmployeeDdlistService _ddlistService;
+        private readonly IEmployeeW4Service _w4Service;
+        private readonly IWebHostEnvironment _env;
+
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IAccountTypeService accountTypeService, IEmployeeFilingStatusService employeeFilingStatusService, IEmployeeStateService employeeStateService, IEmployeeBankDetailsService bankService, IEmployeeDdlistService ddlistService, IEmployeeW4Service w4Service, IWebHostEnvironment env
+
+)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -30,6 +42,13 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
+            _accountTypeService = accountTypeService;
+            _employeeFilingStatusService = employeeFilingStatusService;
+            _employeeStateService = employeeStateService;
+            _bankService = bankService;
+            _ddlistService = ddlistService;
+            _w4Service = w4Service;
+            _env = env;
         }
         public class BulkInsertRequest
         {
@@ -125,7 +144,7 @@ namespace HRMS_Backend.Controllers
         /// <returns></returns>
         /// 
         [HttpDelete("DeleteCompany/{id}")]
-       
+
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _companyService.DeleteCompanyAsync(id);
@@ -195,7 +214,7 @@ namespace HRMS_Backend.Controllers
                         });
 
                     // Add more entity cases as needed
-                    
+
 
                     default:
                         return BadRequest(new { Success = false, Message = "Unsupported entity type." });
@@ -320,7 +339,7 @@ namespace HRMS_Backend.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.UserId }, createdUser);
         }
 
-      
+
 
         [HttpPut("UpdateUser/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
@@ -368,7 +387,7 @@ namespace HRMS_Backend.Controllers
         /// </summary>
         [HttpGet("GetAllMenus")]
         public async Task<IActionResult> GetAllMenus()
-       {
+        {
             var menus = await _menuService.GetAllMenusAsync();
             return Ok(menus);
         }
@@ -604,7 +623,224 @@ namespace HRMS_Backend.Controllers
             }
         }
         #endregion
+        //-----------------------------------DROP-DOWN (ACCOUNT TYPE = EMPLOYEE.BANKDETAILS)----------------------------//
+        #region Account Type Details
+
+        /// <summary>
+        /// Get all active account types
+        /// </summary>
+        [HttpGet("GetActiveAccountTypes")]
+        public async Task<IActionResult> GetActiveAccountTypes()
+        {
+            var result = await _accountTypeService.GetActiveAccountTypesAsync();
+            return Ok(result);
+        }
+
+        #endregion
+
+        //----------------------------------DROP-DOWN (FILING STATUS = EMPLOYEE.BANKDETAILS)----------------------------------------//
+
+        [HttpGet("GetActiveFilingStatuses")]
+        public async Task<IActionResult> GetActiveFilingStatuses()
+        {
+            var data = await _employeeFilingStatusService.GetActiveFilingStatusesAsync();
+            return Ok(data);
+        }
+        //------------------------------DROPDOWN (STATES)------------------------------------------------------------------//
+        [HttpGet("GetActiveStates")]
+        public async Task<IActionResult> GetActiveStates()
+        {
+            var data = await _employeeStateService.GetActiveStatesAsync();
+            return Ok(data);
+        }
+
+        //-----------------------------------Employee-Finance (BANK-DETAILS)--------------------------------------------//
+        #region Employee Bank Details
+
+        [HttpGet("GetAllBankDetails")]
+        public async Task<IActionResult> GetAllBankDetails()
+        {
+            var data = await _bankService.GetAllAsync();
+            return Ok(data);
+        }
+
+        [HttpGet("GetBankDetailsById/{id}")]
+        public async Task<IActionResult> GetBankDetailsById(int id)
+        {
+            var data = await _bankService.GetByIdAsync(id);
+            if (data == null) return NotFound();
+            return Ok(data);
+        }
+
+        [HttpPost("CreateBankDetails")]
+        public async Task<IActionResult> CreateBankDetails([FromBody] EmployeeBankDetailsDto dto)
+        {
+            if (dto == null) return BadRequest("Invalid data");
+            var success = await _bankService.AddAsync(dto);
+            if (!success) return BadRequest("Failed to create bank details");
+            return Ok(dto);
+        }
+
+        [HttpPut("UpdateBankDetails")]
+        public async Task<IActionResult> UpdateBankDetails([FromBody] EmployeeBankDetailsDto dto)
+        {
+            if (dto == null) return BadRequest("Invalid data");
+            var success = await _bankService.UpdateAsync(dto);
+            if (!success) return BadRequest("Failed to update bank details");
+            return Ok(dto);
+        }
+
+        [HttpDelete("DeleteBankDetails/{id}")]
+        public async Task<IActionResult> DeleteBankDetails(int id)
+        {
+            var success = await _bankService.DeleteAsync(id);
+            if (!success) return NotFound("Bank details not found");
+            return NoContent();
+        }
+
+        #endregion
 
 
+        //----------------------------------Employee-Finance (DD-LIST)--------------------------------------------//
+
+        #region DD List CRUD
+
+        [HttpGet("GetAllDdlist")]
+        public async Task<IActionResult> GetAllDdlist()
+        {
+            var data = await _ddlistService.GetAllAsync();
+            return Ok(data);
+        }
+
+        [HttpGet("GetDdlistById/{id}")]
+        public async Task<IActionResult> GetDdlistById(int id)
+        {
+            var data = await _ddlistService.GetByIdAsync(id);
+            if (data == null) return NotFound();
+            return Ok(data);
+        }
+
+        [HttpPost("CreateDdlist")]
+        public async Task<IActionResult> CreateDdlist([FromBody] EmployeeDdlistDto dto)
+        {
+            var result = await _ddlistService.AddAsync(dto);
+            if (!result) return BadRequest("Failed to create DD List entry.");
+            return Ok(dto);
+        }
+
+        [HttpPut("UpdateDdlist")]
+        public async Task<IActionResult> UpdateDdlist([FromBody] EmployeeDdlistDto dto)
+        {
+            var result = await _ddlistService.UpdateAsync(dto);
+            if (!result) return BadRequest("Failed to update DD List entry.");
+            return Ok(dto);
+        }
+
+        [HttpDelete("DeleteDdlist/{id}")]
+        public async Task<IActionResult> DeleteDdlist(int id)
+        {
+            var result = await _ddlistService.DeleteAsync(id);
+            if (!result) return NotFound();
+            return NoContent();
+        }
+
+        #endregion
+
+        #region DD Copy File Upload / Download
+        [HttpPost("UploadDDCopy")]
+        public async Task<IActionResult> UploadDDCopy(IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                    return BadRequest("No file uploaded.");
+
+                var uploadsFolder = Path.Combine(_env.WebRootPath ?? "wwwroot", "DDCopies");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                string fileName = $"{Guid.NewGuid()}_{Path.GetFileName(file.FileName)}";
+                string filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                return Ok(new { fileName });
+            }
+            catch (Exception ex)
+            {
+                // Return detailed error in dev
+                return StatusCode(500, ex.Message + " | " + ex.StackTrace);
+            }
+        }
+
+
+        [HttpGet("DownloadDDCopy/{fileName}")]
+        public IActionResult DownloadDDCopy(string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
+                return BadRequest("Invalid filename");
+
+            fileName = Path.GetFileName(fileName); // sanitize
+            var filePath = Path.Combine(_env.WebRootPath ?? "wwwroot", "DDCopies", fileName);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found");
+
+            var contentType = fileName.EndsWith(".pdf") ? "application/pdf" :
+                              fileName.EndsWith(".png") ? "image/png" :
+                              fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg") ? "image/jpeg" :
+                              "application/octet-stream";
+
+            return PhysicalFile(filePath, contentType, fileName);
+        }
+
+        #endregion
+
+        //----------------------------------Employee-Finance (W4(USA))--------------------------------------------//
+        #region Employee W4
+        [HttpGet("GetAllW4s")]
+        public async Task<IActionResult> GetAllW4s()
+        {
+            var data = await _w4Service.GetAllAsync();
+            return Ok(data);
+        }
+
+        [HttpGet("GetW4ById/{id}")]
+        public async Task<IActionResult> GetW4ById(int id)
+        {
+            var data = await _w4Service.GetByIdAsync(id);
+            if (data == null) return NotFound();
+            return Ok(data);
+        }
+
+        [HttpPost("CreateW4")]
+        public async Task<IActionResult> CreateW4([FromBody] EmployeeW4Dto dto)
+        {
+            var result = await _w4Service.AddAsync(dto);
+            if (!result) return BadRequest("Failed to create W4 entry.");
+            return Ok(dto);
+        }
+
+        [HttpPut("UpdateW4")]
+        public async Task<IActionResult> UpdateW4([FromBody] EmployeeW4Dto dto)
+        {
+            var result = await _w4Service.UpdateAsync(dto);
+            if (!result) return BadRequest("Failed to update W4 entry.");
+            return Ok(dto);
+        }
+
+        [HttpDelete("DeleteW4/{id}")]
+        public async Task<IActionResult> DeleteW4(int id)
+        {
+            var result = await _w4Service.DeleteAsync(id);
+            if (!result) return NotFound();
+            return NoContent();
+        }
+        #endregion
     }
 }
+
+
