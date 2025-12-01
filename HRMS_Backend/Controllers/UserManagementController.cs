@@ -1,10 +1,9 @@
 ﻿using BusinessLayer.DTOs;
+using BusinessLayer.Implementations;
 using BusinessLayer.Interfaces;
 using DataAccessLayer.DBContext;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Text.Json;
@@ -21,8 +20,15 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
+        private readonly IEmployeDocument _employeDocument;
+        private readonly IEmployeeFormService _employeeFormService;
+        private readonly IEmployeeLetterService _employeeLetterService;
+        private readonly IWebHostEnvironment _env;
+
+
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IEmployeDocument employeDocument, IEmployeeFormService employeeFormService, 
+            IWebHostEnvironment env, IEmployeeLetterService employeeLetterService)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -30,6 +36,10 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
+            _employeDocument = employeDocument;
+            _employeeFormService = employeeFormService;
+            _env = env;
+            _employeeLetterService = employeeLetterService;
         }
         public class BulkInsertRequest
         {
@@ -603,6 +613,344 @@ namespace HRMS_Backend.Controllers
                 return StatusCode(500, new { message = "An error occurred while retrieving permissions." });
             }
         }
+        #endregion
+
+
+        #region EmployeeDocuments
+        [HttpGet("GetActiveDocumentTypes")]
+        public async Task<IActionResult> GetActiveDocumentTypes()
+        {
+            var result = await _employeDocument.GetActiveDocumentTypesAsync();
+            return Ok(result);
+        }
+        [HttpGet("documents")]
+        public async Task<IActionResult> GetAllDocuments()
+        {
+            var data = await _employeDocument.GetAllAsync();
+            return Ok(data);
+        }
+
+        [HttpGet("user/{userId}/documents")]
+        public async Task<IActionResult> GetDocumentsByUser(int userId)
+        {
+            if (userId <= 0)
+                return BadRequest(new { message = "Invalid userId" });
+
+            var data = await _employeDocument.GetByUserIdAsync(userId);
+
+            if (data == null || !data.Any())
+                return NotFound(new { message = "No records found" });
+
+            return Ok(data);
+        }
+
+        [HttpGet("documents/{id}")]
+        public async Task<IActionResult> GetDocumentById(int id)
+        {
+            var data = await _employeDocument.GetByIdAsync(id);
+            if (data == null)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(data);
+        }
+
+        [HttpPost("documents")]
+        public async Task<IActionResult> AddDocument([FromForm] EmployeeDocumentDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Create folder
+            string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string path = Path.Combine(root, "Uploads", "EmployeeDocuments");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            // Upload file
+            if (model.DocumentFile != null && model.DocumentFile.Length > 0)
+            {
+                string fileName = $"{Guid.NewGuid()}_{model.DocumentFile.FileName}";
+                string fullPath = Path.Combine(path, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.DocumentFile.CopyToAsync(stream);
+
+                model.FileName = model.DocumentFile.FileName;
+                model.FilePath = $"Uploads/EmployeeDocuments/{fileName}";
+            }
+
+            model.CreatedBy = model.UserId;
+
+            int id = await _employeDocument.AddAsync(model);
+            return Ok(new { message = "Saved successfully", id });
+        }
+
+        [HttpPut("documents/{id}")]
+        public async Task<IActionResult> UpdateDocument(int id, [FromForm] EmployeeDocumentDto model)
+        {
+            if (id != model.Id)
+                return BadRequest("ID mismatch");
+
+            string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string path = Path.Combine(root, "Uploads", "EmployeeDocuments");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            if (model.DocumentFile != null && model.DocumentFile.Length > 0)
+            {
+                string fileName = $"{Guid.NewGuid()}_{model.DocumentFile.FileName}";
+                string fullPath = Path.Combine(path, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.DocumentFile.CopyToAsync(stream);
+
+                model.FileName = model.DocumentFile.FileName;
+                model.FilePath = $"Uploads/EmployeeDocuments/{fileName}";
+            }
+
+            model.ModifiedBy = model.UserId;
+
+            var result = await _employeDocument.UpdateAsync(model);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Updated successfully" });
+        }
+
+        [HttpDelete("documents/{id}")]
+        public async Task<IActionResult> DeleteDocument(int id)
+        {
+            var result = await _employeDocument.DeleteAsync(id);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Deleted successfully" });
+        }
+
+
+        #endregion
+
+
+        #region Employee Forms
+
+        [HttpGet("forms")]
+        public async Task<IActionResult> GetAllForms()
+        {
+            var data = await _employeeFormService.GetAllAsync();
+            return Ok(data);
+        }
+
+        [HttpGet("user/{userId}/forms")]
+        public async Task<IActionResult> GetUserForms(int userId)
+        {
+            if (userId <= 0)
+                return BadRequest(new { message = "Invalid userId" });
+
+            var data = await _employeeFormService.GetByUserIdAsync(userId);
+
+            if (data == null || !data.Any())
+                return NotFound(new { message = "No forms found" });
+
+            return Ok(data);
+        }
+
+        [HttpGet("forms/{id}")]
+        public async Task<IActionResult> GetFormById(int id)
+        {
+            var data = await _employeeFormService.GetByIdAsync(id);
+            if (data == null)
+                return NotFound(new { message = "Form not found" });
+
+            return Ok(data);
+        }
+
+        [HttpPost("forms")]
+        public async Task<IActionResult> AddForm([FromForm] EmployeeFormDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string path = Path.Combine(root, "Uploads", "EmployeeForms");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            if (model.UploadFile != null && model.UploadFile.Length > 0)
+            {
+                string fileName = $"{Guid.NewGuid()}_{model.UploadFile.FileName}";
+                string fullPath = Path.Combine(path, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.UploadFile.CopyToAsync(stream);
+
+                model.FileName = fileName;
+                model.FilePath = $"Uploads/EmployeeForms/{fileName}";
+            }
+            model.CreatedBy = model.UserId;
+
+            var id = await _employeeFormService.AddAsync(model);
+            return Ok(new { message = "Saved successfully", id });
+        }
+
+        [HttpPut("forms/{id}")]
+        public async Task<IActionResult> UpdateForm(int id, [FromForm] EmployeeFormDto model)
+        {
+            if (id != model.Id)
+                return BadRequest("Id mismatch");
+
+            string root = _env.WebRootPath;
+            string path = Path.Combine(root, "Uploads", "EmployeeForms");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            if (model.UploadFile != null && model.UploadFile.Length > 0)
+            {
+                string fileName = $"{Guid.NewGuid()}_{model.UploadFile.FileName}";
+                string fullPath = Path.Combine(path, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.UploadFile.CopyToAsync(stream);
+
+                model.FileName = fileName;
+                model.FilePath = $"Uploads/EmployeeForms/{fileName}";
+            }
+
+            model.ModifiedBy = model.UserId;
+
+            var result = await _employeeFormService.UpdateAsync(model);
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Updated successfully" });
+        }
+
+        [HttpDelete("forms/{id}")]
+        public async Task<IActionResult> DeleteForm(int id)
+        {
+            var result = await _employeeFormService.DeleteAsync(id);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Deleted successfully" });
+        }
+
+        #endregion
+
+        #region Employee Letters
+
+        [HttpGet("letters")]
+        public async Task<IActionResult> GetAllLetters()
+        {
+            var data = await _employeeLetterService.GetAllAsync();
+            return Ok(data);
+        }
+
+        [HttpGet("user/{userId}/letters")]
+        public async Task<IActionResult> GetLettersByUser(int userId)
+        {
+            if (userId <= 0)
+                return BadRequest(new { message = "Invalid userId" });
+
+            var data = await _employeeLetterService.GetByUserIdAsync(userId);
+
+            if (data == null || !data.Any())
+                return NotFound(new { message = "No letters found" });
+
+            return Ok(data);
+        }
+
+        [HttpGet("letters/{id}")]
+        public async Task<IActionResult> GetLetterById(int id)
+        {
+            var data = await _employeeLetterService.GetByIdAsync(id);
+            if (data == null)
+                return NotFound(new { message = "Letter not found" });
+
+            return Ok(data);
+        }
+
+        [HttpPost("letters")]
+        public async Task<IActionResult> AddLetter([FromForm] EmployeeLetterDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string folder = Path.Combine(root, "Uploads", "EmployeeLetters");
+
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            if (model.DocumentFile != null)
+            {
+                string fileName = $"{Guid.NewGuid()}_{model.DocumentFile.FileName}";
+                string fullPath = Path.Combine(folder, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.DocumentFile.CopyToAsync(stream);
+
+                model.FileName = fileName;
+                model.FilePath = $"Uploads/EmployeeLetters/{fileName}";
+            }
+
+            model.CreatedBy = model.UserId;
+
+            var id = await _employeeLetterService.AddAsync(model);
+            return Ok(new { message = "Saved successfully", id });
+        }
+
+        [HttpPut("letters/{id}")]
+        public async Task<IActionResult> UpdateLetter(int id, [FromForm] EmployeeLetterDto model)
+        {
+            if (id != model.Id)
+                return BadRequest("Id mismatch");
+
+            string root = _env.WebRootPath;
+            string folder = Path.Combine(root, "Uploads", "EmployeeLetters");
+
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            if (model.DocumentFile != null)
+            {
+                string fileName = $"{Guid.NewGuid()}_{model.DocumentFile.FileName}";
+                string fullPath = Path.Combine(folder, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.DocumentFile.CopyToAsync(stream);
+
+                model.FileName = fileName;
+                model.FilePath = $"Uploads/EmployeeLetters/{fileName}";
+            }
+
+            model.ModifiedBy = model.UserId;
+
+            var result = await _employeeLetterService.UpdateAsync(model);
+
+            if (!result)
+                return NotFound(new { message = "Letter not found" });
+
+            return Ok(new { message = "Updated successfully" });
+        }
+
+        [HttpDelete("letters/{id}")]
+        public async Task<IActionResult> DeleteLetter(int id)
+        {
+            var result = await _employeeLetterService.DeleteAsync(id);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Deleted successfully" });
+        }
+
         #endregion
 
 
