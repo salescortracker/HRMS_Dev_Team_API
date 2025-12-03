@@ -1,4 +1,5 @@
 ﻿using BusinessLayer.DTOs;
+using BusinessLayer.Implementations;
 using BusinessLayer.Interfaces;
 using DataAccessLayer.DBContext;
 using Microsoft.AspNetCore.Identity.Data;
@@ -21,8 +22,12 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
+        private readonly IEmployeeFamilyService _employeeFamilyService;
+        private readonly IEmployeeEmergencyContactService _employeeEmergencyContactService;
+        private readonly IEmployeeReferenceService _employeeReferenceService;
+     
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IEmployeeFamilyService employeeFamilyService, IEmployeeEmergencyContactService employeeEmergencyContactService, IEmployeeReferenceService employeeReferenceService)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -30,6 +35,9 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
+            _employeeFamilyService = employeeFamilyService;
+            _employeeEmergencyContactService = employeeEmergencyContactService;
+            _employeeReferenceService = employeeReferenceService;
         }
         public class BulkInsertRequest
         {
@@ -605,6 +613,330 @@ namespace HRMS_Backend.Controllers
         }
         #endregion
 
+        #region Employee Family Details
+
+        /// <summary>
+        /// Get all employee family records
+        /// </summary>
+        [HttpGet("family")]
+        public async Task<IActionResult> GetAllFamily()
+        {
+            var data = await _employeeFamilyService.GetAllAsync();
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Get family records for a specific user
+        /// </summary>
+        [HttpGet("user/{userId}/family")]
+        public async Task<IActionResult> GetUserFamily(int userId)
+        {
+            if (userId <= 0)
+                return BadRequest(new { message = "Invalid userId" });
+
+            var data = await _employeeFamilyService.GetByUserIdAsync(userId);
+
+            if (data == null || !data.Any())
+                return NotFound(new { message = "No family details found" });
+
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Get a single family record by ID
+        /// </summary>
+        [HttpGet("family/{id}")]
+        public async Task<IActionResult> GetFamilyById(int id)
+        {
+            var data = await _employeeFamilyService.GetByIdAsync(id);
+
+            if (data == null)
+                return NotFound(new { message = "Family record not found" });
+
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Add a new family entry
+        /// </summary>
+        [HttpPost("family")]
+        public async Task<IActionResult> AddFamily([FromBody] EmployeeFamilyDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // set created by (audit)
+            model.CreatedBy = model.CreatedBy == 0 && model.UserId.HasValue ? model.UserId.Value : model.CreatedBy;
+
+            var id = await _employeeFamilyService.AddAsync(model);
+
+            return Ok(new { message = "Saved successfully", id });
+        }
+
+        /// <summary>
+        /// Update an existing family entry
+        /// </summary>
+        [HttpPut("family/{id}")]
+        public async Task<IActionResult> UpdateFamily(int id, [FromBody] EmployeeFamilyDto model)
+        {
+            if (id != model.FamilyId)
+                return BadRequest(new { message = "Id mismatch" });
+
+            model.ModifiedBy = model.ModifiedBy == 0 && model.UserId.HasValue ? model.UserId.Value : model.ModifiedBy;
+
+            var result = await _employeeFamilyService.UpdateAsync(model);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Updated successfully" });
+        }
+
+        /// <summary>
+        /// Delete a family record
+        /// </summary>
+        [HttpDelete("family/{id}")]
+        public async Task<IActionResult> DeleteFamily(int id)
+        {
+            var result = await _employeeFamilyService.DeleteAsync(id);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Deleted successfully" });
+        }
+
+        /// <summary>
+        /// Get relationship list for dropdowns
+        /// </summary>
+        [HttpGet("relationships")]
+        public async Task<IActionResult> GetRelationships()
+        {
+            var list = await _employeeFamilyService.GetRelationshipListAsync();
+            return Ok(list);
+        }
+
+        /// <summary>
+        /// Get gender list for dropdown
+        /// </summary>
+        [HttpGet("genders")]
+        public async Task<IActionResult> GetGenders()
+        {
+            var list = await _employeeFamilyService.GetGenderListAsync();
+            return Ok(list);
+        }
+
+
+        #endregion
+
+        #region Employee Emergency Contact Details
+
+        /// <summary>
+        /// Get all emergency contact records
+        /// </summary>
+        [HttpGet("emergency-contact")]
+        public async Task<IActionResult> GetAllEmergencyContacts()
+        {
+            var data = await _employeeEmergencyContactService.GetAllAsync();
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Get emergency contacts for a specific user
+        /// </summary>
+        [HttpGet("user/{userId}/emergency-contact")]
+        public async Task<IActionResult> GetUserEmergencyContacts(int userId)
+        {
+            if (userId <= 0)
+                return BadRequest(new { message = "Invalid userId" });
+
+            var data = await _employeeEmergencyContactService.GetByUserIdAsync(userId);
+
+            if (data == null || !data.Any())
+                return NotFound(new { message = "No emergency contact details found" });
+
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Get a single emergency contact record by ID
+        /// </summary>
+        [HttpGet("emergency-contact/{id}")]
+        public async Task<IActionResult> GetEmergencyContactById(int id)
+        {
+            var data = await _employeeEmergencyContactService.GetByIdAsync(id);
+
+            if (data == null)
+                return NotFound(new { message = "Emergency contact record not found" });
+
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Add a new emergency contact entry
+        /// </summary>
+        [HttpPost("emergency-contact")]
+        public async Task<IActionResult> AddEmergencyContact([FromBody] EmployeeEmergencyContactDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            // Audit - createdBy
+            if (string.IsNullOrEmpty(model.CreatedBy) && model.UserId != 0)
+                model.CreatedBy = model.UserId.ToString();
+
+            var id = await _employeeEmergencyContactService.AddAsync(model);
+
+            return Ok(new { message = "Saved successfully", id });
+        }
+
+        /// <summary>
+        /// Update an existing emergency contact entry
+        /// </summary>
+        [HttpPut("emergency-contact/{id}")]
+        public async Task<IActionResult> UpdateEmergencyContact(int id, [FromBody] EmployeeEmergencyContactDto model)
+        {
+            if (id != model.EmergencyContactId)
+                return BadRequest(new { message = "Id mismatch" });
+
+            // Audit - modifiedBy
+            if (string.IsNullOrEmpty(model.ModifiedBy) && model.UserId != 0)
+                model.ModifiedBy = model.UserId.ToString();
+
+            var result = await _employeeEmergencyContactService.UpdateAsync(model);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Updated successfully" });
+        }
+
+        /// <summary>
+        /// Delete an emergency contact record
+        /// </summary>
+        [HttpDelete("emergency-contact/{id}")]
+        public async Task<IActionResult> DeleteEmergencyContact(int id)
+        {
+            var result = await _employeeEmergencyContactService.DeleteAsync(id);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Deleted successfully" });
+        }
+
+        /// <summary>
+        /// Get relationship list for emergency contact dropdowns
+        /// </summary>
+        [HttpGet("emergency-contact/relationships")]
+        public async Task<IActionResult> GetEmergencyContactRelationships()
+        {
+            var list = await _employeeEmergencyContactService.GetRelationshipListAsync();
+            return Ok(list);
+        }
+
+        #endregion
+
+        #region Employee References
+      
+
+        /// <summary>
+        /// Get all employee references
+        /// </summary>
+        [HttpGet("references")]
+        public async Task<IActionResult> GetAllReferences()
+        {
+            var data = await _employeeReferenceService.GetAllAsync();
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Get employee references for a specific user
+        /// </summary>
+        [HttpGet("user/{userId}/references")]
+        public async Task<IActionResult> GetReferencesByUser(int userId)
+        {
+            if (userId <= 0)
+                return BadRequest(new { message = "Invalid userId" });
+
+            var data = await _employeeReferenceService.GetByUserIdAsync(userId);
+
+            if (data == null || !data.Any())
+                return NotFound(new { message = "No reference records found" });
+
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Get a single employee reference by ID
+        /// </summary>
+        [HttpGet("references/{id}")]
+        public async Task<IActionResult> GetReferenceById(int id)
+        {
+            var data = await _employeeReferenceService.GetByIdAsync(id);
+
+            if (data == null)
+                return NotFound(new { message = "Reference record not found" });
+
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Create a new employee reference record
+        /// </summary>
+        [HttpPost("references")]
+        public async Task<IActionResult> AddReference([FromBody] EmployeeReferenceDto model)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            model.CreatedBy = (model.CreatedBy == null || model.CreatedBy == 0)
+                ? model.UserId
+                : model.CreatedBy;
+
+            var id = await _employeeReferenceService.AddAsync(model);
+
+            return Ok(new { message = "Saved successfully", id });
+        }
+
+        /// <summary>
+        /// Update an existing employee reference
+        /// </summary>
+        [HttpPut("references/{id}")]
+        public async Task<IActionResult> UpdateReference(int id, [FromBody] EmployeeReferenceDto model)
+        {
+            if (id != model.ReferenceId)
+                return BadRequest(new { message = "Id mismatch" });
+
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            model.ModifiedBy = (model.ModifiedBy == null || model.ModifiedBy == 0)
+                ? model.UserId
+                : model.ModifiedBy;
+
+            var result = await _employeeReferenceService.UpdateAsync(model);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Updated successfully" });
+        }
+
+        /// <summary>
+        /// Delete employee reference record
+        /// </summary>
+        [HttpDelete("references/{id}")]
+        public async Task<IActionResult> DeleteReference(int id)
+        {
+            var result = await _employeeReferenceService.DeleteAsync(id);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Deleted successfully" });
+        }
+
+        #endregion
 
     }
+
 }
