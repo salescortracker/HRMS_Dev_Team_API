@@ -36,6 +36,7 @@ builder.Services.AddScoped<IDesignationService, DesignationService>();
 builder.Services.AddScoped<IEmployeeFamilyService, EmployeeFamilyService>();
 builder.Services.AddScoped<IEmployeeEmergencyContactService, EmployeeEmergencyContactService>();
 builder.Services.AddScoped<IEmployeeReferenceService, EmployeeReferenceService>();
+builder.Services.AddScoped<IEmployeePersonalService, EmployeePersonalService>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

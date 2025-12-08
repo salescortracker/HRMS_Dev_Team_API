@@ -25,9 +25,13 @@ namespace HRMS_Backend.Controllers
         private readonly IEmployeeFamilyService _employeeFamilyService;
         private readonly IEmployeeEmergencyContactService _employeeEmergencyContactService;
         private readonly IEmployeeReferenceService _employeeReferenceService;
-     
+        private readonly IEmployeePersonalService _employeePersonalService;
+        private readonly IWebHostEnvironment _env;
+
+
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IEmployeeFamilyService employeeFamilyService, IEmployeeEmergencyContactService employeeEmergencyContactService, IEmployeeReferenceService employeeReferenceService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IEmployeeFamilyService employeeFamilyService, IEmployeeEmergencyContactService employeeEmergencyContactService, IEmployeeReferenceService employeeReferenceService
+            , IEmployeePersonalService employeePersonalService, IWebHostEnvironment env)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -38,6 +42,8 @@ namespace HRMS_Backend.Controllers
             _employeeFamilyService = employeeFamilyService;
             _employeeEmergencyContactService = employeeEmergencyContactService;
             _employeeReferenceService = employeeReferenceService;
+            _employeePersonalService = employeePersonalService;
+            _env = env;
         }
         public class BulkInsertRequest
         {
@@ -936,6 +942,118 @@ namespace HRMS_Backend.Controllers
         }
 
         #endregion
+
+        // GET api/UserManagement/marital-statuses/active/names
+        [HttpGet("marital-statuses/active/names")]
+        public async Task<IActionResult> GetActiveMaritalStatusNames()
+        {
+            var names = await _employeeFamilyService.GetActiveNamesAsync();
+            return Ok(names); // returns string[] e.g. ["Single","Married"]
+        }
+
+        [HttpGet("personal")]
+        public async Task<IActionResult> GetAllPersonal()
+        {
+            var data = await _employeePersonalService.GetAllAsync();
+            return Ok(data);
+        }
+
+        [HttpGet("user/{userId}/personal")]
+        public async Task<IActionResult> GetPersonalByUser(int userId)
+        {
+            if (userId <= 0) return BadRequest(new { message = "Invalid userId" });
+
+            var data = await _employeePersonalService.GetByUserIdAsync(userId);
+            if (data == null || !data.Any()) return NotFound(new { message = "No personal details found" });
+
+            return Ok(data);
+        }
+
+        [HttpGet("personal/{id}")]
+        public async Task<IActionResult> GetPersonalById(int id)
+        {
+            var data = await _employeePersonalService.GetByIdAsync(id);
+            if (data == null) return NotFound(new { message = "Record not found" });
+            return Ok(data);
+        }
+
+        [HttpPost("personal")]
+        public async Task<IActionResult> AddPersonal([FromForm] EmployeePersonalDetailDto model)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            string? profilePath = null;
+            if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
+            {
+                string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                string folder = Path.Combine(root, "Uploads", "EmployeeProfilePictures");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                string fileName = $"{Guid.NewGuid()}_{model.ProfilePicture.FileName}";
+                string fullPath = Path.Combine(folder, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.ProfilePicture.CopyToAsync(stream);
+
+                profilePath = $"Uploads/EmployeeProfilePictures/{fileName}";
+                model.ProfilePicturePath = profilePath;
+                model.ProfilePictureName = model.ProfilePicture.FileName;
+
+                // optional: populate base64 if you store in DB
+                // using var ms = new MemoryStream();
+                // await model.ProfilePicture.CopyToAsync(ms);
+                // model.ProfilePictureBase64 = Convert.ToBase64String(ms.ToArray());
+            }
+
+            model.CreatedBy = model.UserId;
+            model.CreatedAt = DateTime.Now;
+
+            var id = await _employeePersonalService.AddAsync(model);
+            return Ok(new { message = "Saved successfully", id });
+        }
+
+        [HttpPut("personal/{id}")]
+        public async Task<IActionResult> UpdatePersonal(int id, [FromForm] EmployeePersonalDetailDto model)
+        {
+            if (id != model.Id) return BadRequest(new { message = "Id mismatch" });
+
+            string? profilePath = null;
+            if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
+            {
+                string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                string folder = Path.Combine(root, "Uploads", "EmployeeProfilePictures");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                string fileName = $"{Guid.NewGuid()}_{model.ProfilePicture.FileName}";
+                string fullPath = Path.Combine(folder, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.ProfilePicture.CopyToAsync(stream);
+
+                profilePath = $"Uploads/EmployeeProfilePictures/{fileName}";
+                model.ProfilePicturePath = profilePath;
+                model.ProfilePictureName = model.ProfilePicture.FileName;
+
+                // optional: base64 conversion similar to Add
+            }
+
+            model.ModifiedBy = model.UserId;
+            model.ModifiedAt = DateTime.Now;
+
+            var result = await _employeePersonalService.UpdateAsync(model);
+            if (!result) return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Updated successfully" });
+        }
+
+        [HttpDelete("personal/{id}")]
+        public async Task<IActionResult> DeletePersonal(int id)
+        {
+            var result = await _employeePersonalService.DeleteAsync(id);
+            if (!result) return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Deleted successfully" });
+        }
 
     }
 
