@@ -34,6 +34,11 @@ builder.Services.AddScoped<IMenuRoleService, MenuRoleService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDesignationService, DesignationService>();
 
+builder.Services.AddScoped<IEmployeeKpiService, EmployeeKpiService>();
+builder.Services.AddScoped<IManagerKpiReviewService, ManagerKpiReviewService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+
 builder.Services.AddScoped<IEmployeeEducationService, EmployeeEducationService>();
 builder.Services.AddScoped<IEmployeeCertificationService, EmployeeCertificationService>();
 builder.Services.AddScoped<IEmployeeJobHistoryService, EmployeeJobHistoryService>();
