@@ -35,12 +35,12 @@ builder.Services.AddScoped<IMenuRoleService, MenuRoleService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDesignationService, DesignationService>();
 builder.Services.AddControllers();
-builder.Services.AddScoped<IAccountTypeService, AccountTypeService>();
-builder.Services.AddScoped<IEmployeeFilingStatusService, EmployeeFilingStatusService>();
-builder.Services.AddScoped<IEmployeeStateService, EmployeeStateService>();
 builder.Services.AddScoped<IEmployeeBankDetailsService, EmployeeBankDetailsService>();
 builder.Services.AddScoped<IEmployeeDdlistService, EmployeeDdlistService>();
 builder.Services.AddScoped<IEmployeeW4Service, EmployeeW4Service>();
+builder.Services.AddScoped<IMissedPunchService, MissedPunchService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

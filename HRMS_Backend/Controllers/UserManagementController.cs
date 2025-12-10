@@ -23,16 +23,15 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
-        private readonly IAccountTypeService _accountTypeService;
-        private readonly IEmployeeFilingStatusService _employeeFilingStatusService;
-        private readonly IEmployeeStateService _employeeStateService;
+
         private readonly IEmployeeBankDetailsService _bankService;
         private readonly IEmployeeDdlistService _ddlistService;
         private readonly IEmployeeW4Service _w4Service;
         private readonly IWebHostEnvironment _env;
-
+        private readonly IMissedPunchService _missedPunchService;
+        private readonly IEmailService _emailService;
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IAccountTypeService accountTypeService, IEmployeeFilingStatusService employeeFilingStatusService, IEmployeeStateService employeeStateService, IEmployeeBankDetailsService bankService, IEmployeeDdlistService ddlistService, IEmployeeW4Service w4Service, IWebHostEnvironment env
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IEmployeeBankDetailsService bankService, IEmployeeDdlistService ddlistService, IEmployeeW4Service w4Service, IWebHostEnvironment env, IMissedPunchService missedPunchService, IEmailService emailService
 
 )
         {
@@ -42,13 +41,13 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
-            _accountTypeService = accountTypeService;
-            _employeeFilingStatusService = employeeFilingStatusService;
-            _employeeStateService = employeeStateService;
+
             _bankService = bankService;
             _ddlistService = ddlistService;
             _w4Service = w4Service;
             _env = env;
+            _missedPunchService = missedPunchService;
+            _emailService = emailService;
         }
         public class BulkInsertRequest
         {
@@ -623,36 +622,9 @@ namespace HRMS_Backend.Controllers
             }
         }
         #endregion
-        //-----------------------------------DROP-DOWN (ACCOUNT TYPE = EMPLOYEE.BANKDETAILS)----------------------------//
-        #region Account Type Details
 
-        /// <summary>
-        /// Get all active account types
-        /// </summary>
-        [HttpGet("GetActiveAccountTypes")]
-        public async Task<IActionResult> GetActiveAccountTypes()
-        {
-            var result = await _accountTypeService.GetActiveAccountTypesAsync();
-            return Ok(result);
-        }
 
-        #endregion
 
-        //----------------------------------DROP-DOWN (FILING STATUS = EMPLOYEE.BANKDETAILS)----------------------------------------//
-
-        [HttpGet("GetActiveFilingStatuses")]
-        public async Task<IActionResult> GetActiveFilingStatuses()
-        {
-            var data = await _employeeFilingStatusService.GetActiveFilingStatusesAsync();
-            return Ok(data);
-        }
-        //------------------------------DROPDOWN (STATES)------------------------------------------------------------------//
-        [HttpGet("GetActiveStates")]
-        public async Task<IActionResult> GetActiveStates()
-        {
-            var data = await _employeeStateService.GetActiveStatesAsync();
-            return Ok(data);
-        }
 
         //-----------------------------------Employee-Finance (BANK-DETAILS)--------------------------------------------//
         #region Employee Bank Details
@@ -696,6 +668,12 @@ namespace HRMS_Backend.Controllers
             var success = await _bankService.DeleteAsync(id);
             if (!success) return NotFound("Bank details not found");
             return NoContent();
+        }
+        [HttpGet("GetAccountTypeDropdown")]
+        public async Task<IActionResult> GetAccountTypeDropdown()
+        {
+            var data = await _bankService.GetDropdownAsync();
+            return Ok(data);
         }
 
         #endregion
@@ -746,7 +724,8 @@ namespace HRMS_Backend.Controllers
 
         #endregion
 
-        #region DD Copy File Upload / Download
+        #region DD Copy File Upload
+
         [HttpPost("UploadDDCopy")]
         public async Task<IActionResult> UploadDDCopy(IFormFile file)
         {
@@ -755,7 +734,8 @@ namespace HRMS_Backend.Controllers
                 if (file == null || file.Length == 0)
                     return BadRequest("No file uploaded.");
 
-                var uploadsFolder = Path.Combine(_env.WebRootPath ?? "wwwroot", "DDCopies");
+                var uploadsFolder = Path.Combine(_env.WebRootPath!, "DDCopies");
+
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
 
@@ -767,35 +747,36 @@ namespace HRMS_Backend.Controllers
                     await file.CopyToAsync(stream);
                 }
 
-                return Ok(new { fileName });
+                return Ok(new
+                {
+                    FileName = fileName,
+                    FileUrl = $"/DDCopies/{fileName}"
+                });
             }
             catch (Exception ex)
             {
-                // Return detailed error in dev
-                return StatusCode(500, ex.Message + " | " + ex.StackTrace);
+                return StatusCode(500, ex.Message);
             }
         }
+
+
+
 
 
         [HttpGet("DownloadDDCopy/{fileName}")]
         public IActionResult DownloadDDCopy(string fileName)
         {
-            if (string.IsNullOrEmpty(fileName))
-                return BadRequest("Invalid filename");
-
-            fileName = Path.GetFileName(fileName); // sanitize
-            var filePath = Path.Combine(_env.WebRootPath ?? "wwwroot", "DDCopies", fileName);
+            var filePath = Path.Combine(_env.WebRootPath!, "DDCopies", fileName);
 
             if (!System.IO.File.Exists(filePath))
-                return NotFound("File not found");
+                return NotFound("File not found.");
 
-            var contentType = fileName.EndsWith(".pdf") ? "application/pdf" :
-                              fileName.EndsWith(".png") ? "image/png" :
-                              fileName.EndsWith(".jpg") || fileName.EndsWith(".jpeg") ? "image/jpeg" :
-                              "application/octet-stream";
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            var contentType = "application/octet-stream";
 
-            return PhysicalFile(filePath, contentType, fileName);
+            return File(fileBytes, contentType, fileName);
         }
+
 
         #endregion
 
@@ -840,7 +821,138 @@ namespace HRMS_Backend.Controllers
             return NoContent();
         }
         #endregion
+
+
+
+        //---------------------------------Missed Punch Request-------------------------------------------//
+
+        #region Missed Punch Requests
+
+        // GET all requests for logged-in employee
+        [HttpGet("GetMyRequests")]
+        public async Task<IActionResult> GetMyRequests([FromQuery] int userId = 1) // default 1 for testing
+        {
+            // If you want, you can check:
+            if (userId <= 0)
+                return BadRequest("UserID is required.");
+
+            var requests = await _missedPunchService.GetMyRequestsAsync(userId);
+            return Ok(requests);
+        }
+
+        // Submit a new missed punch request
+        [HttpPost("SubmitRequest")]
+        public async Task<IActionResult> SubmitRequest([FromBody] MissedPunchRequestDto dto)
+        {
+            if (dto == null)
+                return BadRequest("Invalid request data.");
+
+            // Optional: fetch employee from DB to get CompanyID, RegionID, ManagerID
+            var employee = await _userService.GetUserByIdAsync(dto.EmployeeID);
+            if (employee == null)
+                return BadRequest("Employee not found.");
+
+            // Override CompanyID, RegionID, ManagerID from DB if needed
+            dto.CompanyID = employee.CompanyId;
+            dto.RegionID = employee.RegionId;
+            dto.ManagerID = employee.ReportingTo ?? 0;
+
+            // Submit the request
+            MissedPunchRequestDto result;
+            try
+            {
+                result = await _missedPunchService.SubmitRequestAsync(dto);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message); // e.g., invalid MissedTypeID
+            }
+
+            // Send email notification to manager if manager exists
+            if (dto.ManagerID != 0)
+            {
+                var manager = await _userService.GetUserByIdAsync(dto.ManagerID);
+                if (manager != null && !string.IsNullOrEmpty(manager.Email))
+                {
+                    string subject = "New Missed Punch Request";
+                    string body = $@"
+                <p>Hello {manager.FullName},</p>
+                <p>{employee.FullName} has submitted a missed punch request for {dto.MissedDate:yyyy-MM-dd}.</p>
+                <p><strong>Type:</strong> {dto.MissedType}</p>
+                <p><strong>Reason:</strong> {dto.Reason}</p>
+                <p>Please log in to the portal to approve or reject the request.</p>
+                <p>Thank you.</p>";
+
+                    try
+                    {
+                        await _emailService.SendEmailAsync(manager.Email, subject, body);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error sending email: {ex.Message}");
+                    }
+                }
+            }
+
+            return Ok(result);
+        }
+
+
+        #region Manager Approvals
+
+        // GET all pending requests for logged-in manager
+        [HttpGet("GetPendingRequests")]
+        public async Task<IActionResult> GetPendingRequests([FromQuery] int? userId)
+        {
+            if (userId == null || userId == 0)
+                return BadRequest("UserId is required.");
+
+            // Get the user to fetch company/region if needed
+            var user = await _userService.GetUserByIdAsync(userId.Value);
+            if (user == null)
+                return NotFound("User not found.");
+
+            // Get pending missed punch requests for this user
+            var pendingRequests = await _missedPunchService.GetPendingRequestsForManagerAsync(userId.Value);
+            return Ok(pendingRequests);
+        }
+
+
+        // Approve or Reject a missed punch request
+        [HttpPost("TakeAction")]
+        public async Task<IActionResult> TakeAction([FromBody] MissedPunchActionDto dto)
+        {
+            if (dto == null) return BadRequest("Invalid request data.");
+
+            // Use managerId from request body, not claims
+            int managerId = dto.ManagerId;
+
+            try
+            {
+                // Call the service method directly
+                var result = await _missedPunchService.TakeActionAsync(dto);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                // Handle errors gracefully
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+        #endregion
+
+        //---------------------------------Missed Types Dropdown-------------------------------------------//
+
+        [HttpGet("getMissedTypes")]
+        public async Task<IActionResult> GetMissedTypes()
+        {
+            var types = await _missedPunchService.GetActiveMissedTypesAsync();
+            return Ok(types);
+        }
+
+        #endregion
+
     }
 }
-
-
