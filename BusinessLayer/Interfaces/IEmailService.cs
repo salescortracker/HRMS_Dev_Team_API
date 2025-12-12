@@ -1,10 +1,11 @@
-﻿using System;
+﻿using BusinessLayer.DTOs;
+using DataAccessLayer.DBContext;
+using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using DataAccessLayer.DBContext;
 
 namespace BusinessLayer.Interfaces
 {
@@ -12,5 +13,8 @@ namespace BusinessLayer.Interfaces
     {
         Task SendEmailAsync(string to, string subject, string htmlBody);
         Task SendWelcomeEmailAsync(User user, string password);
+
+        // Add this
+        Task SendMissedPunchEmailAsync(MissedPunchRequestDto dto);
     }
 }

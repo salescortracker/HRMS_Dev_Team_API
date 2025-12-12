@@ -825,127 +825,80 @@ namespace HRMS_Backend.Controllers
 
 
         //---------------------------------Missed Punch Request-------------------------------------------//
-
         #region Missed Punch Requests
 
-        // GET all requests for logged-in employee
+        // GET my requests for logged-in employee
         [HttpGet("GetMyRequests")]
-        public async Task<IActionResult> GetMyRequests([FromQuery] int userId = 1) // default 1 for testing
+        public async Task<IActionResult> GetMyRequests([FromQuery] int employeeId)
         {
-            // If you want, you can check:
-            if (userId <= 0)
-                return BadRequest("UserID is required.");
+            if (employeeId == 0) return BadRequest("EmployeeId is required.");
 
-            var requests = await _missedPunchService.GetMyRequestsAsync(userId);
+            var requests = await _missedPunchService.GetMyRequestsAsync(employeeId);
             return Ok(requests);
         }
 
-        // Submit a new missed punch request
-        [HttpPost("SubmitRequest")]
-        public async Task<IActionResult> SubmitRequest([FromBody] MissedPunchRequestDto dto)
-        {
-            if (dto == null)
-                return BadRequest("Invalid request data.");
-
-            // Optional: fetch employee from DB to get CompanyID, RegionID, ManagerID
-            var employee = await _userService.GetUserByIdAsync(dto.EmployeeID);
-            if (employee == null)
-                return BadRequest("Employee not found.");
-
-            // Override CompanyID, RegionID, ManagerID from DB if needed
-            dto.CompanyID = employee.CompanyId;
-            dto.RegionID = employee.RegionId;
-            dto.ManagerID = employee.ReportingTo ?? 0;
-
-            // Submit the request
-            MissedPunchRequestDto result;
-            try
-            {
-                result = await _missedPunchService.SubmitRequestAsync(dto);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message); // e.g., invalid MissedTypeID
-            }
-
-            // Send email notification to manager if manager exists
-            if (dto.ManagerID != 0)
-            {
-                var manager = await _userService.GetUserByIdAsync(dto.ManagerID);
-                if (manager != null && !string.IsNullOrEmpty(manager.Email))
-                {
-                    string subject = "New Missed Punch Request";
-                    string body = $@"
-                <p>Hello {manager.FullName},</p>
-                <p>{employee.FullName} has submitted a missed punch request for {dto.MissedDate:yyyy-MM-dd}.</p>
-                <p><strong>Type:</strong> {dto.MissedType}</p>
-                <p><strong>Reason:</strong> {dto.Reason}</p>
-                <p>Please log in to the portal to approve or reject the request.</p>
-                <p>Thank you.</p>";
-
-                    try
-                    {
-                        await _emailService.SendEmailAsync(manager.Email, subject, body);
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Error sending email: {ex.Message}");
-                    }
-                }
-            }
-
-            return Ok(result);
-        }
-
-
-        #region Manager Approvals
-
-        // GET all pending requests for logged-in manager
+        // GET pending requests for manager (current logged-in user)
         [HttpGet("GetPendingRequests")]
         public async Task<IActionResult> GetPendingRequests([FromQuery] int? userId)
         {
             if (userId == null || userId == 0)
                 return BadRequest("UserId is required.");
 
-            // Get the user to fetch company/region if needed
             var user = await _userService.GetUserByIdAsync(userId.Value);
-            if (user == null)
-                return NotFound("User not found.");
 
-            // Get pending missed punch requests for this user
+            if (user == null)
+                return Ok(new List<MissedPunchRequestDto>());
+
             var pendingRequests = await _missedPunchService.GetPendingRequestsForManagerAsync(userId.Value);
             return Ok(pendingRequests);
         }
 
+        // Submit a missed punch request
+        [HttpPost("SubmitRequest")]
+        public async Task<IActionResult> SubmitRequest([FromBody] MissedPunchRequestDto dto)
+        {
+            if (dto == null) return BadRequest("Invalid request data.");
 
-        // Approve or Reject a missed punch request
+            try
+            {
+                var result = await _missedPunchService.SubmitRequestAsync(dto);
+
+                if (dto.ManagerID != 0)
+                {
+                    await _emailService.SendMissedPunchEmailAsync(result);
+                }
+                else
+                {
+                    return BadRequest("No reporting manager assigned. You may be a manager.");
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // Approve/Reject a missed punch request
         [HttpPost("TakeAction")]
         public async Task<IActionResult> TakeAction([FromBody] MissedPunchActionDto dto)
         {
             if (dto == null) return BadRequest("Invalid request data.");
 
-            // Use managerId from request body, not claims
-            int managerId = dto.ManagerId;
-
             try
             {
-                // Call the service method directly
                 var result = await _missedPunchService.TakeActionAsync(dto);
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                // Handle errors gracefully
                 return BadRequest(ex.Message);
             }
         }
 
-
-        #endregion
-
-        //---------------------------------Missed Types Dropdown-------------------------------------------//
-
-        [HttpGet("getMissedTypes")]
+        // Missed Types Dropdown
+        [HttpGet("GetMissedTypes")]
         public async Task<IActionResult> GetMissedTypes()
         {
             var types = await _missedPunchService.GetActiveMissedTypesAsync();
@@ -953,6 +906,5 @@ namespace HRMS_Backend.Controllers
         }
 
         #endregion
-
     }
 }

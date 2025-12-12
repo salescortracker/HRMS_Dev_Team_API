@@ -22,6 +22,7 @@ namespace BusinessLayer.DTOs
         public int CompanyID { get; set; }
         public int? RegionID { get; set; }
     }
+
     public class MissedPunchActionDto
     {
         public int RequestId { get; set; }
@@ -30,3 +31,5 @@ namespace BusinessLayer.DTOs
         public string? ManagerRemarks { get; set; }
     }
 }
+
+    

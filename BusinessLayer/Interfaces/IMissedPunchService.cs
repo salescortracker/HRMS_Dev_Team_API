@@ -13,6 +13,6 @@ namespace BusinessLayer.Interfaces
         Task<List<MissedPunchRequestDto>> GetPendingRequestsForManagerAsync(int managerId);
         Task<MissedPunchRequestDto> SubmitRequestAsync(MissedPunchRequestDto dto);
         Task<bool> TakeActionAsync(MissedPunchActionDto actionDto);
-       Task<List<MissedTypeDto>> GetActiveMissedTypesAsync();
+        Task<List<MissedTypeDto>> GetActiveMissedTypesAsync();
     }
 }

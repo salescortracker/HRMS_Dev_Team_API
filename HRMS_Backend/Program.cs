@@ -41,7 +41,6 @@ builder.Services.AddScoped<IEmployeeW4Service, EmployeeW4Service>();
 builder.Services.AddScoped<IMissedPunchService, MissedPunchService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 
-
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
