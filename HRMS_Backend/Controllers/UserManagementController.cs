@@ -22,8 +22,11 @@ namespace HRMS_Backend.Controllers
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
         private readonly IShiftAllocationService _shiftAllocationService;
+        private readonly IDigitalService _digitalService;
+        private readonly IEmployeeProfileService _employeeProfileService;
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IShiftAllocationService shiftAllocationService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService,
+            IShiftAllocationService shiftAllocationService, IDigitalService digitalService, IEmployeeProfileService employeeProfileService)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -32,6 +35,8 @@ namespace HRMS_Backend.Controllers
             _roleService = roleService;
             _menuRoleService = menuRoleService;
             _shiftAllocationService = shiftAllocationService;
+            _digitalService = digitalService;
+            _employeeProfileService = employeeProfileService;
         }
         public class BulkInsertRequest
         {
@@ -127,7 +132,7 @@ namespace HRMS_Backend.Controllers
         /// <returns></returns>
         /// 
         [HttpDelete("DeleteCompany/{id}")]
-       
+
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _companyService.DeleteCompanyAsync(id);
@@ -197,7 +202,7 @@ namespace HRMS_Backend.Controllers
                         });
 
                     // Add more entity cases as needed
-                    
+
 
                     default:
                         return BadRequest(new { Success = false, Message = "Unsupported entity type." });
@@ -322,7 +327,7 @@ namespace HRMS_Backend.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.UserId }, createdUser);
         }
 
-      
+
 
         [HttpPut("UpdateUser/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
@@ -370,7 +375,7 @@ namespace HRMS_Backend.Controllers
         /// </summary>
         [HttpGet("GetAllMenus")]
         public async Task<IActionResult> GetAllMenus()
-       {
+        {
             var menus = await _menuService.GetAllMenusAsync();
             return Ok(menus);
         }
@@ -701,9 +706,40 @@ namespace HRMS_Backend.Controllers
         }
 
 
-    
 
 
+
+        #endregion
+
+        #region DigitalCard
+        [HttpGet("GetDigitalCard/{userId}")]
+        public async Task<IActionResult> GetDigitalCard(int userId)
+        {
+            var result = await _digitalService.GetDigitalCardAsync(userId);
+            if (result ==null) return 
+                    NotFound("User Not Found");
+            return Ok(result);
+        }
+
+        #endregion
+
+
+
+        #region
+        [HttpGet("GetProfile/{userId}")]
+        public async Task<IActionResult> GetProfile(int userId)
+        {
+            var data = await _employeeProfileService.GetEmployeeProfileAsync(userId);
+
+            if (data == null)
+                return NotFound(new { message = "Employee profile not found" });
+
+            return Ok(new
+            {
+                message = "Profile Loaded Successfully",
+                data
+            });
+        }
         #endregion
     }
 }
