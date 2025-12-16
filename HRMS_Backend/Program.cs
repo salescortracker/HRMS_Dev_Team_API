@@ -34,11 +34,17 @@ builder.Services.AddScoped<IMenuRoleService, MenuRoleService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDesignationService, DesignationService>();
 
+builder.Services.AddScoped<IEmployeeKpiService, EmployeeKpiService>();
+builder.Services.AddScoped<IManagerKpiReviewService, ManagerKpiReviewService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IExpenseService, ExpenseService>();
+
 builder.Services.AddScoped<IEmployeeEducationService, EmployeeEducationService>();
 builder.Services.AddScoped<IEmployeeCertificationService, EmployeeCertificationService>();
 builder.Services.AddScoped<IEmployeeJobHistoryService, EmployeeJobHistoryService>();
 
 builder.Services.AddScoped<IEmployeeResignationService, EmployeeResignationService>();
+
 
 
 builder.Services.AddControllers();
@@ -62,6 +68,7 @@ app.UseStaticFiles();
 app.UseCors(corsPolicyName);
 app.UseHttpsRedirection();
 
+app.UseStaticFiles();
 app.UseAuthorization();
 
 app.MapControllers();
