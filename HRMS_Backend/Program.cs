@@ -36,6 +36,7 @@ builder.Services.AddScoped<IDesignationService, DesignationService>();
 builder.Services.AddScoped<IEmployeeKpiService, EmployeeKpiService>();
 builder.Services.AddScoped<IManagerKpiReviewService, ManagerKpiReviewService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IExpenseService, ExpenseService>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -55,6 +56,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors(corsPolicyName);
 app.UseHttpsRedirection();
 
+app.UseStaticFiles();
 app.UseAuthorization();
 
 app.MapControllers();
