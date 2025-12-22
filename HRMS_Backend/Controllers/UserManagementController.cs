@@ -22,6 +22,14 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
+
+        private readonly IShiftAllocationService _shiftAllocationService;
+        private readonly IDigitalService _digitalService;
+        private readonly IEmployeeProfileService _employeeProfileService;
+        public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService,
+            IShiftAllocationService shiftAllocationService, IDigitalService digitalService, IEmployeeProfileService employeeProfileService)
+
         private readonly IEmployeeEducationService _employeeEducationService;
         private readonly IEmployeeCertificationService _employeeCertificationService;
         private readonly IEmployeeJobHistoryService _employeeJobHistoryService;
@@ -30,6 +38,7 @@ namespace HRMS_Backend.Controllers
 
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
             , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IEmployeeEducationService employeeEducationService, IWebHostEnvironment env,IEmployeeCertificationService employeeCertificationService, IEmployeeJobHistoryService employeeJobHistoryService)
+
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -37,10 +46,16 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
+
+            _shiftAllocationService = shiftAllocationService;
+            _digitalService = digitalService;
+            _employeeProfileService = employeeProfileService;
+
             _employeeEducationService = employeeEducationService;
             _employeeCertificationService = employeeCertificationService;
             _env = env;
             _employeeJobHistoryService = employeeJobHistoryService;
+
         }
         public class BulkInsertRequest
         {
@@ -136,7 +151,7 @@ namespace HRMS_Backend.Controllers
         /// <returns></returns>
         /// 
         [HttpDelete("DeleteCompany/{id}")]
-       
+
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _companyService.DeleteCompanyAsync(id);
@@ -206,7 +221,7 @@ namespace HRMS_Backend.Controllers
                         });
 
                     // Add more entity cases as needed
-                    
+
 
                     default:
                         return BadRequest(new { Success = false, Message = "Unsupported entity type." });
@@ -331,7 +346,7 @@ namespace HRMS_Backend.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.UserId }, createdUser);
         }
 
-      
+
 
         [HttpPut("UpdateUser/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
@@ -379,7 +394,7 @@ namespace HRMS_Backend.Controllers
         /// </summary>
         [HttpGet("GetAllMenus")]
         public async Task<IActionResult> GetAllMenus()
-       {
+        {
             var menus = await _menuService.GetAllMenusAsync();
             return Ok(menus);
         }
@@ -615,6 +630,129 @@ namespace HRMS_Backend.Controllers
             }
         }
         #endregion
+
+
+        #region ShiftAllocation
+
+        [HttpGet("GetAllShifts")]
+        public async Task<IActionResult> GetAllShifts()
+        {
+            var data = await _shiftAllocationService.GetAllShiftsAsync();
+            return Ok(data);
+        }
+
+        [HttpGet("GetShiftById/{shiftId}")]
+        public async Task<IActionResult> GetShiftById(int shiftId)
+        {
+            var result = await _shiftAllocationService.GetShiftByIdAsync(shiftId);
+            if (result == null) return NotFound("Shift not found");
+            return Ok(result);
+        }
+
+        [HttpPost("AddShift")]
+        public async Task<IActionResult> AddShift([FromBody] ShiftMasterDto dto)
+        {
+            var status = await _shiftAllocationService.AddShiftAsync(dto);
+            return status ? Ok("Shift added successfully") : BadRequest("Failed to add shift");
+        }
+
+        [HttpPut("UpdateShift")]
+        public async Task<IActionResult> UpdateShift([FromBody] ShiftMasterDto dto)
+        {
+            var status = await _shiftAllocationService.UpdateShiftAsync(dto);
+            return status ? Ok("Shift updated successfully") : NotFound("Shift not found");
+        }
+
+        [HttpDelete("DeleteShift/{shiftId}")]
+        public async Task<IActionResult> DeleteShift(int shiftId)
+        {
+            var status = await _shiftAllocationService.DeleteShiftAsync(shiftId);
+            return status ? Ok("Shift deleted successfully") : NotFound("Shift not found");
+        }
+
+        [HttpPut("ActivateShift/{shiftId}")]
+        public async Task<IActionResult> ActivateShift(int shiftId)
+        {
+            var status = await _shiftAllocationService.ActivateShiftAsync(shiftId);
+            return status ? Ok("Shift activated") : NotFound("Shift not found");
+        }
+
+        [HttpPut("DeactivateShift/{shiftId}")]
+        public async Task<IActionResult> DeactivateShift(int shiftId)
+        {
+            var status = await _shiftAllocationService.DeactivateShiftAsync(shiftId);
+            return status ? Ok("Shift deactivated") : NotFound("Shift not found");
+        }
+
+
+        // ===========================================================
+        //                  SHIFT ALLOCATION API
+        // ===========================================================
+
+        [HttpGet("GetAllAllocations")]
+        public async Task<IActionResult> GetAllAllocations()
+        {
+            var list = await _shiftAllocationService.GetAllAllocationsAsync();
+            return Ok(list);
+        }
+
+        [HttpGet("GetAllocationById/{id}")]
+        public async Task<IActionResult> GetAllocationById(int id)
+        {
+            var result = await _shiftAllocationService.GetAllocationByIdAsync(id);
+            if (result == null) return NotFound("Allocation not found");
+            return Ok(result);
+        }
+
+        [HttpPost("AllocateShift")]
+        public async Task<IActionResult> AllocateShift([FromBody] ShiftAllocationDto dto)
+        {
+            var status = await _shiftAllocationService.AllocateShiftAsync(dto);
+            return status ? Ok("Shift allocated successfully") : BadRequest("Failed to allocate shift");
+        }
+
+        [HttpPut("UpdateAllocation")]
+        public async Task<IActionResult> UpdateAllocation([FromBody] ShiftAllocationDto dto)
+        {
+            var status = await _shiftAllocationService.UpdateAllocationAsync(dto);
+            return status ? Ok("Allocation updated successfully") : NotFound("Allocation not found");
+        }
+
+        [HttpDelete("DeleteAllocation/{id}")]
+        public async Task<IActionResult> DeleteAllocation(int id)
+        {
+            var status = await _shiftAllocationService.DeleteAllocationAsync(id);
+            return status ? Ok("Allocation deleted") : NotFound("Allocation not found");
+        }
+
+
+        #endregion
+
+        #region DigitalCard
+        [HttpGet("GetDigitalCard/{userId}")]
+        public async Task<IActionResult> GetDigitalCard(int userId)
+        {
+            var result = await _digitalService.GetDigitalCardAsync(userId);
+            if (result == null) return
+                    NotFound("User Not Found");
+            return Ok(result);
+        }
+
+
+
+        [HttpGet("DownloadProfileImage/{userId}")]
+        public async Task<IActionResult> DownloadProfileImage(int userId)
+        {
+            var image = await _digitalService.employeeimage(userId);
+
+            if (image == null || string.IsNullOrEmpty(image.FilePath))
+                return NotFound("Profile image not found");
+
+            var fullPath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                image.FilePath
+            );
 
         #region Employee Education
         [HttpGet("education")]
@@ -1013,5 +1151,74 @@ namespace HRMS_Backend.Controllers
 
         #endregion
 
+
+            if (!System.IO.File.Exists(fullPath))
+                return NotFound("File not found");
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
+
+            return File(
+                fileBytes,
+                "application/octet-stream",
+                Path.GetFileName(fullPath) // forces download
+            );
+
+        }
+
+
+        #endregion
+
+
+
+        #region EmployeeProfile
+        [HttpGet("GetProfile/{userId}")]
+        public async Task<IActionResult> GetProfile(int userId)
+        {
+            var data = await _employeeProfileService.GetEmployeeProfileAsync(userId);
+
+            if (data == null)
+                return NotFound(new { message = "Employee profile not found" });
+
+            return Ok(new
+            {
+                message = "Profile Loaded Successfully",
+                data
+            });
+        }
+        [HttpPost("UploadProfileImage")]
+        public async Task<IActionResult> UploadProfileImage([FromForm] EmployeeImageRequestDto dto)
+        {
+            if (dto.Image == null || dto.Image.Length == 0)
+                return BadRequest("Image file is required");
+
+            string root = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string path = Path.Combine(root, "Uploads", "ProfileImages");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            // 🔐 unique file name
+            string fileName = $"{Guid.NewGuid()}_{dto.Image.FileName}";
+            string fullPath = Path.Combine(path, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+            {
+                await dto.Image.CopyToAsync(stream);
+            }
+
+            dto.FileName = fileName;
+            dto.FilePath = $"Uploads/ProfileImages/{fileName}";
+
+            int id = await _employeeProfileService.SaveEmployeeImageAsync(dto);
+
+            return Ok(new
+            {
+                message = "Profile image uploaded successfully",
+                imageId = id,
+                imagePath = dto.FilePath
+            });
+        }
+        #endregion
     }
 }
+
