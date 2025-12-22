@@ -10,6 +10,6 @@ namespace BusinessLayer.Interfaces
     public interface IEmployeeProfileService
     {
         Task<EmployeeProfileDto?> GetEmployeeProfileAsync(int userId);
-
+        Task<int> SaveEmployeeImageAsync(EmployeeImageRequestDto dto);
     }
 }

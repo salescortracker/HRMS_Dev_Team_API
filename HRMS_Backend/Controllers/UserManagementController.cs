@@ -706,9 +706,6 @@ namespace HRMS_Backend.Controllers
         }
 
 
-
-
-
         #endregion
 
         #region DigitalCard
@@ -716,16 +713,46 @@ namespace HRMS_Backend.Controllers
         public async Task<IActionResult> GetDigitalCard(int userId)
         {
             var result = await _digitalService.GetDigitalCardAsync(userId);
-            if (result ==null) return 
+            if (result == null) return
                     NotFound("User Not Found");
             return Ok(result);
         }
+
+
+
+        [HttpGet("DownloadProfileImage/{userId}")]
+        public async Task<IActionResult> DownloadProfileImage(int userId)
+        {
+            var image = await _digitalService.employeeimage(userId);
+
+            if (image == null || string.IsNullOrEmpty(image.FilePath))
+                return NotFound("Profile image not found");
+
+            var fullPath = Path.Combine(
+                Directory.GetCurrentDirectory(),
+                "wwwroot",
+                image.FilePath
+            );
+
+            if (!System.IO.File.Exists(fullPath))
+                return NotFound("File not found");
+
+            var fileBytes = await System.IO.File.ReadAllBytesAsync(fullPath);
+
+            return File(
+                fileBytes,
+                "application/octet-stream",
+                Path.GetFileName(fullPath) // forces download
+            );
+
+        }
+
 
         #endregion
 
 
 
-        #region
+        #region EmployeeProfile
         [HttpGet("GetProfile/{userId}")]
         public async Task<IActionResult> GetProfile(int userId)
         {
@@ -740,6 +767,40 @@ namespace HRMS_Backend.Controllers
                 data
             });
         }
+        [HttpPost("UploadProfileImage")]
+        public async Task<IActionResult> UploadProfileImage([FromForm] EmployeeImageRequestDto dto)
+        {
+            if (dto.Image == null || dto.Image.Length == 0)
+                return BadRequest("Image file is required");
+
+            string root = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string path = Path.Combine(root, "Uploads", "ProfileImages");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            // 🔐 unique file name
+            string fileName = $"{Guid.NewGuid()}_{dto.Image.FileName}";
+            string fullPath = Path.Combine(path, fileName);
+
+            using (var stream = new FileStream(fullPath, FileMode.Create))
+            {
+                await dto.Image.CopyToAsync(stream);
+            }
+
+            dto.FileName = fileName;
+            dto.FilePath = $"Uploads/ProfileImages/{fileName}";
+
+            int id = await _employeeProfileService.SaveEmployeeImageAsync(dto);
+
+            return Ok(new
+            {
+                message = "Profile image uploaded successfully",
+                imageId = id,
+                imagePath = dto.FilePath
+            });
+        }
         #endregion
     }
 }
+

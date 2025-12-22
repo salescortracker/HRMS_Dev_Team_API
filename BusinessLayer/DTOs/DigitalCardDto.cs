@@ -19,6 +19,6 @@ namespace BusinessLayer.DTOs
         public string MobileNumber { get; set; }
         public string PersonalEmail { get; set; }
         public string LinkedInProfile { get; set; }
-        public string ProfilePictureBase64 { get; set; }
+        public string? ProfileImagePath { get; set; }
     }
 }

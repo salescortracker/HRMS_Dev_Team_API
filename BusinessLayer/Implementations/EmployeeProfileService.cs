@@ -54,7 +54,7 @@ namespace BusinessLayer.Implementations
                     EmployeeCode = u.EmployeeCode,
                     FullName = u.FullName,
                     Email = u.Email,
-
+                    
                     Phone = ep.MobileNumber,
 
                     BandGrade = ep.BandGrade,
@@ -72,13 +72,51 @@ namespace BusinessLayer.Implementations
                     Location = reg.RegionName,
 
                     ShiftName = sm.ShiftName,
-                    SkypeId = ep.LinkedInProfile
-                }
+                    SkypeId = ep.LinkedInProfile,
+                    ProfilePicture = _context.EmployeeImages
+                        .Where(i => i.UserId == userId)
+                        .OrderByDescending(i => i.CreatedAt)
+                        .Select(i => i.FilePath)
+                        .FirstOrDefault()
+                        }
             ).FirstOrDefaultAsync();
 
             return data;
         }
+        public async Task<int> SaveEmployeeImageAsync(EmployeeImageRequestDto dto)
+        {
+            // Optional: remove old image for same user
+            var existing = _context.EmployeeImages
+                .FirstOrDefault(x => x.UserId == dto.UserId);
 
+            if (existing != null)
+            {
+                existing.FileName = dto.FileName!;
+                existing.FilePath = dto.FilePath!;
+                existing.ModifiedBy = dto.CreatedBy;
+                existing.ModifiedAt = DateTime.Now;
+            }
+            else
+            {
+                var entity = new EmployeeImage
+                {
+                    RegionId = dto.RegionId,
+                    CompanyId = dto.CompanyId,
+                    UserId = dto.UserId,
+                    FileName = dto.FileName!,
+                    FilePath = dto.FilePath,
+                    CreatedBy = dto.CreatedBy,
+                    CreatedAt = DateTime.Now
+                };
+
+                _context.EmployeeImages.Add(entity);
+                await _context.SaveChangesAsync();
+                return entity.Id;
+            }
+
+            await _context.SaveChangesAsync();
+            return existing!.Id;
+        }
 
 
     }

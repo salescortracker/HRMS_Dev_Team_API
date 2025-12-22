@@ -28,5 +28,10 @@ namespace BusinessLayer.DTOs
 
         public string ShiftName { get; set; }
         public string SkypeId { get; set; }
+        public string? ProfilePicture { get; set; }
+
     }
+
+   
+
 }
