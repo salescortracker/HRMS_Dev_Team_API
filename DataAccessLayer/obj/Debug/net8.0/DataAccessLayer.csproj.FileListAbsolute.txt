@@ -12,3 +12,18 @@ D:\Cortracker projects\HRMS_GIT\HRMS_Dev_API\DataAccessLayer\obj\Debug\net8.0\re
 D:\Cortracker projects\HRMS_GIT\HRMS_Dev_API\DataAccessLayer\bin\Debug\net8.0\DataAccessLayer.runtimeconfig.json
 D:\Cortracker projects\HRMS_GIT\HRMS_Dev_API\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.csproj.AssemblyReference.cache
 D:\Cortracker projects\HRMS_GIT\HRMS_Dev_API\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.genruntimeconfig.cache
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\bin\Debug\net8.0\DataAccessLayer.deps.json
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\bin\Debug\net8.0\DataAccessLayer.runtimeconfig.json
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\bin\Debug\net8.0\DataAccessLayer.dll
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\bin\Debug\net8.0\DataAccessLayer.pdb
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.csproj.AssemblyReference.cache
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.GeneratedMSBuildEditorConfig.editorconfig
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.AssemblyInfoInputs.cache
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.AssemblyInfo.cs
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.csproj.CoreCompileInputs.cache
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.sourcelink.json
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.dll
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\obj\Debug\net8.0\refint\DataAccessLayer.dll
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.pdb
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\obj\Debug\net8.0\DataAccessLayer.genruntimeconfig.cache
+C:\Coretracker\HRMS\RealTime\HRMS_API\DataAccessLayer\obj\Debug\net8.0\ref\DataAccessLayer.dll

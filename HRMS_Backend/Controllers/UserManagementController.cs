@@ -21,8 +21,10 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
+        private readonly IRaiseTicketService _raiseTicketService;
+        private readonly ITicketApprovalService _raiseTicketApprovalService;
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IRaiseTicketService raiseTicketService, ITicketApprovalService raiseTicketApprovalService)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -30,6 +32,8 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
+            _raiseTicketService = raiseTicketService;
+            _raiseTicketApprovalService = raiseTicketApprovalService;
         }
         public class BulkInsertRequest
         {
@@ -603,6 +607,85 @@ namespace HRMS_Backend.Controllers
                 return StatusCode(500, new { message = "An error occurred while retrieving permissions." });
             }
         }
+        #endregion
+        #region Raise Ticket Details
+        [HttpGet("GetAllTickets")]
+        public async Task<IActionResult> GetAllTickets()
+        {
+            var tickets = await _raiseTicketService.GetAllTicketsAsync();
+            return Ok(tickets);
+        }
+
+        [HttpGet("GetTicketById/{id}")]
+        public async Task<IActionResult> GetTicketById(int id)
+        {
+            var ticket = await _raiseTicketService.GetTicketByIdAsync(id);
+            if (ticket == null)
+                return NotFound();
+
+            return Ok(ticket);
+        }
+
+        [HttpPost("CreateTickets")]
+        public async Task<IActionResult> CreateTicket([FromBody] RaiseTicketCreateDto ticketDto)
+        {
+            if (ticketDto == null)
+                return BadRequest("Invalid ticket data");
+
+            var createdTicket = await _raiseTicketService.CreateTicketAsync(ticketDto);
+
+            return CreatedAtAction(nameof(GetTicketById), new { id = createdTicket.RaiseTicketId }, createdTicket);
+        }
+
+
+
+        [HttpPut("UpdateTicket/{id}")]
+        public async Task<IActionResult> UpdateTicket(int id, [FromBody] RaiseTicketUpdateDto ticket)
+        {
+            var updatedTicket = await _raiseTicketService.UpdateTicketAsync(id, ticket);
+            if (updatedTicket == null)
+                return NotFound();
+
+            return Ok(updatedTicket);
+        }
+
+        [HttpDelete("DeleteTicket/{id}")]
+        public async Task<IActionResult> DeleteTicket(int id)
+        {
+            var deleted = await _raiseTicketService.DeleteRaiseTicketAsync(id);
+            if (!deleted)
+                return NotFound();
+
+            return Ok();
+        }
+        #endregion
+        #region Ticket Approval Details
+
+        [HttpGet("GetApprovalTickets")]
+        public async Task<IActionResult> Get() => Ok(await _raiseTicketApprovalService.GetApprovalsAsync());
+
+        [HttpPut("UpdateApprovalTicket/{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] RaiseTicketApprovalUpdateDto dto)
+        {
+            if (id != dto.RaiseTicketApprovalId) return BadRequest("ID mismatch");
+            await _raiseTicketApprovalService.UpdateApprovalAsync(id, dto);
+            return NoContent();
+        }
+
+        [HttpPost("bulk-approve")]
+        public async Task<IActionResult> BulkApprove([FromBody] BulkTicketApprovalDto dto)
+        {
+            await _raiseTicketApprovalService.BulkApproveAsync(dto);
+            return Ok(new { message = "Approved successfully" });
+        }
+
+        [HttpPost("bulk-reject")]
+        public async Task<IActionResult> BulkReject([FromBody] BulkTicketApprovalDto dto)
+        {
+            await _raiseTicketApprovalService.BulkRejectAsync(dto);
+            return Ok(new { message = "Rejected successfully" });
+        }
+
         #endregion
 
 

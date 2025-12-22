@@ -1533,6 +1533,253 @@
         }
       }
     },
+    "/api/UserManagement/GetAllTickets": {
+      "get": {
+        "tags": [
+          "UserManagement"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/UserManagement/GetTicketById/{id}": {
+      "get": {
+        "tags": [
+          "UserManagement"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/UserManagement/CreateTickets": {
+      "post": {
+        "tags": [
+          "UserManagement"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaiseTicketCreateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaiseTicketCreateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaiseTicketCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/UserManagement/UpdateTicket/{id}": {
+      "put": {
+        "tags": [
+          "UserManagement"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaiseTicketUpdateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaiseTicketUpdateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaiseTicketUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/UserManagement/DeleteTicket/{id}": {
+      "delete": {
+        "tags": [
+          "UserManagement"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/UserManagement/GetApprovalTickets": {
+      "get": {
+        "tags": [
+          "UserManagement"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/UserManagement/UpdateApprovalTicket/{id}": {
+      "put": {
+        "tags": [
+          "UserManagement"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaiseTicketApprovalUpdateDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaiseTicketApprovalUpdateDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaiseTicketApprovalUpdateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/UserManagement/bulk-approve": {
+      "post": {
+        "tags": [
+          "UserManagement"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkTicketApprovalDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkTicketApprovalDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkTicketApprovalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/UserManagement/bulk-reject": {
+      "post": {
+        "tags": [
+          "UserManagement"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkTicketApprovalDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkTicketApprovalDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkTicketApprovalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/WeatherForecast": {
       "get": {
         "tags": [
@@ -1810,6 +2057,36 @@
             "type": "array",
             "items": { },
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "BulkTicketApprovalDto": {
+        "type": "object",
+        "properties": {
+          "raiseTicketApprovalIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "nullable": true
+          },
+          "managerComments": {
+            "type": "string",
+            "nullable": true
+          },
+          "managerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ticketStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "actionBy": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false
@@ -2941,6 +3218,135 @@
           },
           "region": {
             "$ref": "#/components/schemas/Region"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RaiseTicketApprovalUpdateDto": {
+        "type": "object",
+        "properties": {
+          "raiseTicketApprovalId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "raiseTicketId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "managerStatus": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "managerComments": {
+            "type": "string",
+            "nullable": true
+          },
+          "managerId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "ticketStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "modifiedBy": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "modifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RaiseTicketCreateDto": {
+        "type": "object",
+        "properties": {
+          "companyID": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "regionID": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "departmentID": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "categoryID": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subjectIssue": {
+            "type": "string",
+            "nullable": true
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "uploadPicPath": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdBy": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RaiseTicketUpdateDto": {
+        "type": "object",
+        "properties": {
+          "raiseTicketID": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "departmentID": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "categoryID": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "subjectIssue": {
+            "type": "string",
+            "nullable": true
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "uploadPicPath": {
+            "type": "string",
+            "nullable": true
+          },
+          "modifiedBy": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false

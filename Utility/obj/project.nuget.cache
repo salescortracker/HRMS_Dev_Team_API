@@ -1,8 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "281KBRMrv9I=",
+  "dgSpecHash": "Ra9bZoTUXpQ=",
   "success": true,
-  "projectFilePath": "D:\\Cortracker projects\\HRMS_GIT\\HRMS_Dev_API\\Utility\\Utility.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "C:\\Coretracker\\HRMS\\RealTime\\HRMS_API\\Utility\\Utility.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\joyce\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.22\\microsoft.windowsdesktop.app.ref.8.0.22.nupkg.sha512",
+    "C:\\Users\\joyce\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.22\\microsoft.netcore.app.ref.8.0.22.nupkg.sha512",
+    "C:\\Users\\joyce\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.22\\microsoft.aspnetcore.app.ref.8.0.22.nupkg.sha512"
+  ],
   "logs": []
 }

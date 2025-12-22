@@ -13,3 +13,19 @@ D:\Cortracker projects\HRMS_GIT\HRMS_Dev_API\BusinessLayer\obj\Debug\net8.0\Busi
 D:\Cortracker projects\HRMS_GIT\HRMS_Dev_API\BusinessLayer\bin\Debug\net8.0\DataAccessLayer.dll
 D:\Cortracker projects\HRMS_GIT\HRMS_Dev_API\BusinessLayer\bin\Debug\net8.0\DataAccessLayer.pdb
 D:\Cortracker projects\HRMS_GIT\HRMS_Dev_API\BusinessLayer\obj\Debug\net8.0\Business.EA331CBA.Up2Date
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\bin\Debug\net8.0\BusinessLayer.deps.json
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\bin\Debug\net8.0\BusinessLayer.dll
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\bin\Debug\net8.0\BusinessLayer.pdb
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\bin\Debug\net8.0\DataAccessLayer.dll
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\bin\Debug\net8.0\DataAccessLayer.pdb
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\obj\Debug\net8.0\BusinessLayer.csproj.AssemblyReference.cache
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\obj\Debug\net8.0\BusinessLayer.GeneratedMSBuildEditorConfig.editorconfig
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\obj\Debug\net8.0\BusinessLayer.AssemblyInfoInputs.cache
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\obj\Debug\net8.0\BusinessLayer.AssemblyInfo.cs
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\obj\Debug\net8.0\BusinessLayer.csproj.CoreCompileInputs.cache
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\obj\Debug\net8.0\BusinessLayer.sourcelink.json
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\obj\Debug\net8.0\Business.EA331CBA.Up2Date
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\obj\Debug\net8.0\BusinessLayer.dll
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\obj\Debug\net8.0\refint\BusinessLayer.dll
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\obj\Debug\net8.0\BusinessLayer.pdb
+C:\Coretracker\HRMS\RealTime\HRMS_API\BusinessLayer\obj\Debug\net8.0\ref\BusinessLayer.dll

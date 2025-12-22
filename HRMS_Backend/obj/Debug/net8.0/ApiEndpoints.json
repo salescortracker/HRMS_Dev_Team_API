@@ -333,6 +333,38 @@
   },
   {
     "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
+    "Method": "BulkApprove",
+    "RelativePath": "api/UserManagement/bulk-approve",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BusinessLayer.DTOs.BulkTicketApprovalDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
+    "Method": "BulkReject",
+    "RelativePath": "api/UserManagement/bulk-reject",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BusinessLayer.DTOs.BulkTicketApprovalDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
     "Method": "BulkInsert",
     "RelativePath": "api/UserManagement/BulkInsert",
     "HttpMethod": "POST",
@@ -374,6 +406,22 @@
       {
         "Name": "dto",
         "Type": "BusinessLayer.DTOs.RoleMasterDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
+    "Method": "CreateTicket",
+    "RelativePath": "api/UserManagement/CreateTickets",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "ticketDto",
+        "Type": "BusinessLayer.DTOs.RaiseTicketCreateDto",
         "IsRequired": true
       }
     ],
@@ -461,6 +509,22 @@
   },
   {
     "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
+    "Method": "DeleteTicket",
+    "RelativePath": "api/UserManagement/DeleteTicket/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
     "Method": "DeleteUser",
     "RelativePath": "api/UserManagement/DeleteUser/{id}",
     "HttpMethod": "DELETE",
@@ -529,8 +593,28 @@
   },
   {
     "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
+    "Method": "GetAllTickets",
+    "RelativePath": "api/UserManagement/GetAllTickets",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
     "Method": "GetAllUsers",
     "RelativePath": "api/UserManagement/GetAllUsers",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
+    "Method": "Get",
+    "RelativePath": "api/UserManagement/GetApprovalTickets",
     "HttpMethod": "GET",
     "IsController": true,
     "Order": 0,
@@ -671,6 +755,22 @@
   },
   {
     "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
+    "Method": "GetTicketById",
+    "RelativePath": "api/UserManagement/GetTicketById/{id}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
     "Method": "GetUserById",
     "RelativePath": "api/UserManagement/GetUserById/{id}",
     "HttpMethod": "GET",
@@ -788,6 +888,27 @@
   {
     "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
     "Method": "Update",
+    "RelativePath": "api/UserManagement/UpdateApprovalTicket/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "BusinessLayer.DTOs.RaiseTicketApprovalUpdateDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
+    "Method": "Update",
     "RelativePath": "api/UserManagement/UpdateCompany/{id}",
     "HttpMethod": "POST",
     "IsController": true,
@@ -864,6 +985,27 @@
       {
         "Name": "dto",
         "Type": "BusinessLayer.DTOs.RoleMasterDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
+    "Method": "UpdateTicket",
+    "RelativePath": "api/UserManagement/UpdateTicket/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "ticket",
+        "Type": "BusinessLayer.DTOs.RaiseTicketUpdateDto",
         "IsRequired": true
       }
     ],

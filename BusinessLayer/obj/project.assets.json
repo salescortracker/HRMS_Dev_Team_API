@@ -3109,23 +3109,23 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\HR\\.nuget\\packages\\": {},
+    "C:\\Users\\joyce\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\Cortracker projects\\HRMS_GIT\\HRMS_Dev_API\\BusinessLayer\\BusinessLayer.csproj",
+      "projectUniqueName": "C:\\Coretracker\\HRMS\\RealTime\\HRMS_API\\BusinessLayer\\BusinessLayer.csproj",
       "projectName": "BusinessLayer",
-      "projectPath": "D:\\Cortracker projects\\HRMS_GIT\\HRMS_Dev_API\\BusinessLayer\\BusinessLayer.csproj",
-      "packagesPath": "C:\\Users\\HR\\.nuget\\packages\\",
-      "outputPath": "D:\\Cortracker projects\\HRMS_GIT\\HRMS_Dev_API\\BusinessLayer\\obj\\",
+      "projectPath": "C:\\Coretracker\\HRMS\\RealTime\\HRMS_API\\BusinessLayer\\BusinessLayer.csproj",
+      "packagesPath": "C:\\Users\\joyce\\.nuget\\packages\\",
+      "outputPath": "C:\\Coretracker\\HRMS\\RealTime\\HRMS_API\\BusinessLayer\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\HR\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\joyce\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -3141,8 +3141,8 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "projectReferences": {
-            "D:\\Cortracker projects\\HRMS_GIT\\HRMS_Dev_API\\DataAccessLayer\\DataAccessLayer.csproj": {
-              "projectPath": "D:\\Cortracker projects\\HRMS_GIT\\HRMS_Dev_API\\DataAccessLayer\\DataAccessLayer.csproj"
+            "C:\\Coretracker\\HRMS\\RealTime\\HRMS_API\\DataAccessLayer\\DataAccessLayer.csproj": {
+              "projectPath": "C:\\Coretracker\\HRMS\\RealTime\\HRMS_API\\DataAccessLayer\\DataAccessLayer.csproj"
             }
           }
         }
@@ -3173,12 +3173,26 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[8.0.22, 8.0.22]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[8.0.22, 8.0.22]"
+          },
+          {
+            "name": "Microsoft.WindowsDesktop.App.Ref",
+            "version": "[8.0.22, 8.0.22]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.307/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
