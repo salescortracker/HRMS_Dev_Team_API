@@ -25,18 +25,27 @@ builder.Services.AddCors(options =>
 // Add services to the container.
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IGeneralRepository<>), typeof(GenericRepository<>));
+
 builder.Services.AddScoped<ICompanyService, CompanyService>();
 builder.Services.AddScoped<IRegionService, RegionService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMenuMasterService, MenuMasterService>();
 builder.Services.AddScoped<IRoleMasterService, RoleMasterService>();
 builder.Services.AddScoped<IMenuRoleService, MenuRoleService>();
+
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDesignationService, DesignationService>();
+builder.Services.AddScoped<IBloodGroupService, BloodGroupService>();
+
+
 builder.Services.AddScoped<IEmployeeFamilyService, EmployeeFamilyService>();
 builder.Services.AddScoped<IEmployeeEmergencyContactService, EmployeeEmergencyContactService>();
 builder.Services.AddScoped<IEmployeeReferenceService, EmployeeReferenceService>();
 builder.Services.AddScoped<IEmployeePersonalService, EmployeePersonalService>();
+
+builder.Services.AddScoped<ICompanyNewsService, CompanyNewsService>();
+builder.Services.AddScoped<IGenderService, GenderService>();
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

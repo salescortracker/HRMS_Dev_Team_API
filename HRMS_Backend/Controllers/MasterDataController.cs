@@ -13,14 +13,18 @@ namespace HRMS_Backend.Controllers
         private readonly IGenderService _genderService;
         private readonly ILogger<MasterDataController> _logger;
         private readonly IDesignationService _designationService;
-        private readonly IBloodGroupService _bloodGroupservice;
-        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService, IBloodGroupService bloodGroupservice, ILogger<MasterDataController> logger)
+        private readonly ICompanyNewsService _companyNewsService;
+        private readonly IWebHostEnvironment _env;
+
+
+        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService, IBloodGroupService bloodGroupservice, ILogger<MasterDataController> logger,ICompanyNewsService companyNewsService, IWebHostEnvironment env)
         {
             _service = service;
             _designationService = designationService;
             _genderService = genderService;
-            _bloodGroupservice = bloodGroupservice;
+            _companyNewsService = companyNewsService;
             _logger = logger;
+            _env = env;
         }
         #region Departments
         // ✅ GET ALL (with optional filters later)
@@ -355,7 +359,147 @@ namespace HRMS_Backend.Controllers
             return Ok(new { message = "Gender deleted successfully" });
         }
         #endregion
-        
+
+        // ================= COMPANY NEWS =================
+
+        [HttpPost("CreateCompanyNews")]
+        public async Task<IActionResult> CreateCompanyNews([FromForm] CompanyNewsDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                string path = Path.Combine(root, "Uploads", "CompanyNews");
+
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+
+                // 🔹 File handling
+                if (dto.UploadFile != null && dto.UploadFile.Length > 0)
+                {
+                    string fileName = $"{Guid.NewGuid()}_{dto.UploadFile.FileName}";
+                    string fullPath = Path.Combine(path, fileName);
+
+                    using var stream = new FileStream(fullPath, FileMode.Create);
+                    await dto.UploadFile.CopyToAsync(stream);
+
+                    dto.AttachmentName = fileName;
+                    dto.AttachmentPath = $"Uploads/CompanyNews/{fileName}";
+                }
+
+                int userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+
+                dto.CreatedBy = userId;
+               
+
+
+                var newsId = await _companyNewsService.CreateAsync(dto);
+
+                return Ok(new { message = "Company news saved successfully", NewsId = newsId });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while creating company news");
+                return StatusCode(500, "Error while creating company news");
+            }
+        }
+
+        [HttpPut("UpdateCompanyNews/{id}")]
+        public async Task<IActionResult> UpdateCompanyNews(int id, [FromForm] CompanyNewsDto dto)
+        {
+            if (id != dto.NewsId)
+                return BadRequest("Id mismatch");
+
+            try
+            {
+                string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                string path = Path.Combine(root, "Uploads", "CompanyNews");
+
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+
+                // 🔹 File handling
+                if (dto.UploadFile != null && dto.UploadFile.Length > 0)
+                {
+                    string fileName = $"{Guid.NewGuid()}_{dto.UploadFile.FileName}";
+                    string fullPath = Path.Combine(path, fileName);
+
+                    using var stream = new FileStream(fullPath, FileMode.Create);
+                    await dto.UploadFile.CopyToAsync(stream);
+
+                    dto.AttachmentName = fileName;
+                    dto.AttachmentPath = $"Uploads/CompanyNews/{fileName}";
+                }
+
+                int userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
+
+                
+                dto.UpdatedBy = userId;
+
+
+                await _companyNewsService.UpdateAsync(dto);
+
+                return Ok(new { message = "Company news updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while updating company news");
+                return StatusCode(500, "Error while updating company news");
+            }
+        }
+
+        [HttpGet("GetCompanyNews")]
+        public async Task<IActionResult> GetCompanyNews(
+            [FromQuery] int companyId,
+            [FromQuery] int regionId)
+        {
+            try
+            {
+                var result = await _companyNewsService.GetAllAsync(companyId, regionId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while fetching company news");
+                return StatusCode(500, "Error while fetching company news");
+            }
+        }
+
+        [HttpDelete("DeleteCompanyNews/{newsId}")]
+        public async Task<IActionResult> DeleteCompanyNews(int newsId)
+        {
+            try
+            {
+                await _companyNewsService.DeleteAsync(newsId);
+                return Ok("Company news deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while deleting company news");
+                return StatusCode(500, "Error while deleting company news");
+            }
+        }
+        [HttpGet("GetCompanyNewsForSuperAdmin")]
+        public async Task<IActionResult> GetCompanyNewsForSuperAdmin(
+     [FromQuery] string category)
+        {
+            if (string.IsNullOrEmpty(category))
+                return BadRequest("Category is required");
+
+            try
+            {
+                var result = await _companyNewsService.GetForSuperAdminAsync(category);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while fetching Super Admin news");
+                return StatusCode(500, "Error while fetching company news");
+            }
+        }
+
 
     }
 }
