@@ -97,7 +97,8 @@ namespace BusinessLayer.Implementations
                                           CompanyName = c.CompanyName,
                                           roleId=u.RoleId,
                                           companyId=u.CompanyId,
-                                          regionId=u.RegionId
+                                          regionId=u.RegionId,
+                                          departmentId=u.DepartmentId
                                       })
                                      .FirstOrDefaultAsync();
 
