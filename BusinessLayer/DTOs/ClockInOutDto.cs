@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BusinessLayer.DTOs
 {
-   
+
     public class ClockInOutDto
     {
         public int ClockInOutId { get; set; }
@@ -15,14 +15,18 @@ namespace BusinessLayer.DTOs
 
         public string EmployeeCode { get; set; } = null!;
         public string EmployeeName { get; set; } = null!;
-        public string Department { get; set; } = null!;
-
+        public int Department { get; set; }
+        public string Departments { get; set; }
         public DateTime AttendanceDate { get; set; }
 
         public string ActionType { get; set; } = null!;
-
-        // send as "HH:mm"
         public string ActionTime { get; set; } = null!;
+
+        // ✅ NEW
+        public string? ClockInTime { get; set; }
+        public string? ClockOutTime { get; set; }
+        public int TotalMinutes { get; set; }
+        public string TotalDuration { get; set; } = "00:00";
 
         public string Status { get; set; } = null!;
     }

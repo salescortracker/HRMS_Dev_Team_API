@@ -1,4 +1,5 @@
 ﻿using BusinessLayer.DTOs;
+using BusinessLayer.Implementations;
 using BusinessLayer.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
@@ -50,5 +51,52 @@ namespace HRMS_Backend.Controllers
             if (!success) return NotFound("Attendance record not found");
             return Ok(new { message = "Deleted successfully" });
         }
+
+        /// <summary>
+        /// Get employees who left early
+        /// </summary>
+        [HttpGet("early-departures")]
+        public async Task<IActionResult> GetEarlyDepartures(
+       int companyId,
+       int regionId,
+       DateOnly fromDate,
+       DateOnly toDate,
+       string? employeeCode = null)
+        {
+            var result = await _clockInOutService.GetEarlyDeparturesAsync(
+                companyId, regionId, fromDate, toDate, employeeCode
+            );
+
+            return Ok(result);
+        }
+
+        [HttpGet("late-arrivals")]
+        public async Task<IActionResult> GetLateArrivals(
+          int companyId,
+          int regionId,
+          DateOnly fromDate,
+          DateOnly toDate,
+          string? employeeCode = null)
+        {
+            var result = await _clockInOutService.GetLateArrivalsAsync(
+                companyId, regionId, fromDate, toDate, employeeCode);
+
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get employees for dropdown by company & region
+        /// </summary>
+        [HttpGet("dropdown")]
+        public async Task<IActionResult> GetEmployeesDropdown(
+            [FromQuery] int companyId,
+            [FromQuery] int regionId)
+        {
+            var data = await _clockInOutService
+                .GetEmployeesByCompanyRegionAsync(companyId, regionId);
+
+            return Ok(data);
+        }
+
     }
 }
