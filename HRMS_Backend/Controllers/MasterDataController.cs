@@ -15,9 +15,10 @@ namespace HRMS_Backend.Controllers
         private readonly IDesignationService _designationService;
         private readonly ICompanyNewsService _companyNewsService;
         private readonly IWebHostEnvironment _env;
+        private readonly ICategoryServicecs _categoryService;
 
 
-        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService, IBloodGroupService bloodGroupservice, ILogger<MasterDataController> logger,ICompanyNewsService companyNewsService, IWebHostEnvironment env)
+        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService, IBloodGroupService bloodGroupservice, ILogger<MasterDataController> logger, ICompanyNewsService companyNewsService, IWebHostEnvironment env, ICategoryServicecs categoryService)
         {
             _service = service;
             _designationService = designationService;
@@ -25,6 +26,7 @@ namespace HRMS_Backend.Controllers
             _companyNewsService = companyNewsService;
             _logger = logger;
             _env = env;
+            _categoryService = categoryService;
         }
         #region Departments
         // ✅ GET ALL (with optional filters later)
@@ -35,7 +37,7 @@ namespace HRMS_Backend.Controllers
             {
                 var result = await _service.GetAllAsync();
 
-                if (result == null )
+                if (result == null)
                     return NotFound(new { success = false, message = "No departments found." });
 
                 return Ok(new { success = true, message = "Departments retrieved successfully.", data = result });
@@ -165,7 +167,7 @@ namespace HRMS_Backend.Controllers
             {
                 var result = await _designationService.GetAllAsync();
 
-                if (result == null )
+                if (result == null)
                     return NotFound(new { success = false, message = "No designations found." });
 
                 return Ok(new { success = true, message = "Designations retrieved successfully.", data = result });
@@ -229,7 +231,7 @@ namespace HRMS_Backend.Controllers
 
             try
             {
-                var modifiedBy =1; // 🔒 TODO: Replace with logged-in user later
+                var modifiedBy = 1; // 🔒 TODO: Replace with logged-in user later
                 var result = await _designationService.UpdateAsync(id, dto, modifiedBy);
 
                 if (!result.Success)
@@ -392,7 +394,7 @@ namespace HRMS_Backend.Controllers
                 int userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
 
                 dto.CreatedBy = userId;
-               
+
 
 
                 var newsId = await _companyNewsService.CreateAsync(dto);
@@ -435,7 +437,7 @@ namespace HRMS_Backend.Controllers
 
                 int userId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
 
-                
+
                 dto.UpdatedBy = userId;
 
 
@@ -501,5 +503,87 @@ namespace HRMS_Backend.Controllers
         }
 
 
+
+        #region Categories
+
+        [HttpGet]
+        [Route("GetActiveCategories")]
+        public async Task<IActionResult> GetAllActiveCategories()
+        {
+            var data = await _categoryService.GetActiveCategoriesAsync();
+            return Ok(data);
+        }
+
+     
+
+
+        [HttpGet("GetAll")]
+        public async Task<IActionResult> GetAll(int companyId, int regionId)
+        {
+            return Ok(await _categoryService.GetAllAsync(companyId, regionId));
+        }
+
+        [HttpGet("GetById/{id}")]
+        public async Task<IActionResult> GetAllById(int id)
+        {
+            var result = await _categoryService.GetByIdAsync(id);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+
+        [HttpPost("Create")]
+        public async Task<IActionResult> Create([FromForm] CompanyPolicyDto dto)
+        {
+            UploadFile(dto);
+            var result = await _categoryService.AddAsync(dto);
+            return Ok(new { message = "Policy created successfully", data = result });
+        }
+
+        [HttpPost("Update/{id}")]
+        public async Task<IActionResult> Update(int id, [FromForm] CompanyPolicyDto dto)
+        {
+            UploadFile(dto);
+            var result = await _categoryService.UpdateAsync(id, dto);
+            return Ok(new { message = "Policy updated successfully", data = result });
+        }
+
+        [HttpPost("Delete/{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            bool success = await _categoryService.DeleteAsync(id);
+            if (!success) return NotFound();
+            return Ok(new { message = "Policy deleted successfully" });
+        }
+
+        private void UploadFile(CompanyPolicyDto dto)
+        {
+            if (dto.File == null || dto.File.Length == 0) return;
+
+            string root = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string path = Path.Combine(root, "Uploads", "CompanyPolicies");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            string fileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
+            string fullPath = Path.Combine(path, fileName);
+
+            using var stream = new FileStream(fullPath, FileMode.Create);
+            dto.File.CopyTo(stream);
+
+            dto.FileName = fileName;
+            dto.FilePath = $"Uploads/CompanyPolicies/{fileName}";
+        }
+        [HttpGet("GetAllPolicies")]
+        public async Task<IActionResult> GetAllPolicies()
+        {
+            var result = await _categoryService.GetAllPoliciesAsync();
+            return Ok(result);
+        }
+
+        #endregion
     }
 }
+
+
+    
