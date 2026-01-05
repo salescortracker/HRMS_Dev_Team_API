@@ -38,6 +38,13 @@ builder.Services.AddScoped<IGenderService, GenderService>();
 builder.Services.AddScoped<IAssetService, AssetService>();  
 builder.Services.AddScoped<IAssetApprovalService, AssetApprovalService>();
 
+builder.Services.AddScoped<IEmployeeEducationService, EmployeeEducationService>();
+builder.Services.AddScoped<IEmployeeCertificationService, EmployeeCertificationService>();
+builder.Services.AddScoped<IEmployeeJobHistoryService, EmployeeJobHistoryService>();
+
+builder.Services.AddScoped<IEmployeeResignationService, EmployeeResignationService>();
+
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -54,6 +61,8 @@ if (app.Environment.IsDevelopment())
 // --------------------
 // 4️⃣ Use CORS
 // --------------------
+app.UseStaticFiles();
+
 app.UseCors(corsPolicyName);
 app.UseHttpsRedirection();
 
