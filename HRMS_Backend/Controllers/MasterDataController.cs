@@ -13,14 +13,17 @@ namespace HRMS_Backend.Controllers
         private readonly IGenderService _genderService;
         private readonly ILogger<MasterDataController> _logger;
         private readonly IDesignationService _designationService;
-        private readonly IBloodGroupService _bloodGroupservice;
-        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService, IBloodGroupService bloodGroupservice, ILogger<MasterDataController> logger)
+        //private readonly IBloodGroupService _bloodGroupservice;
+        private readonly IAssetStatusService _assetStatusService;
+
+        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService,  ILogger<MasterDataController> logger, IAssetStatusService assetStatusService)
         {
             _service = service;
             _designationService = designationService;
             _genderService = genderService;
-            _bloodGroupservice = bloodGroupservice;
+            //_bloodGroupservice = bloodGroupservice;
             _logger = logger;
+            _assetStatusService = assetStatusService;
         }
         #region Departments
         // ✅ GET ALL (with optional filters later)
@@ -355,7 +358,55 @@ namespace HRMS_Backend.Controllers
             return Ok(new { message = "Gender deleted successfully" });
         }
         #endregion
-        
+
+
+
+        // ===================== ASSET STATUS =====================
+
+        /// <summary>
+        /// Asset Status CRUD APIs
+        /// </summary>
+        [HttpGet("asset-status")]
+        public async Task<IActionResult> GetAllAssetStatuses(
+        [FromQuery] int companyId,
+        [FromQuery] int regionId)
+        {
+            var result = await _assetStatusService.GetAllAsync(companyId, regionId);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Creates a new asset status
+        /// </summary>
+        [HttpPost("asset-status")]
+        public async Task<IActionResult> CreateAssetStatus([FromBody] AssetStatusDto dto)
+        {
+            var id = await _assetStatusService.CreateAsync(dto);
+            return Ok(id);
+        }
+
+        /// <summary>
+        /// Updates an existing asset status
+        /// </summary>
+        [HttpPut("asset-status/{id}")]
+        public async Task<IActionResult> UpdateAssetStatus(int id, [FromBody] AssetStatusDto dto)
+        {
+            dto.AssetStatusId = id;
+            var updated = await _assetStatusService.UpdateAsync(dto);
+            return updated ? Ok() : NotFound();
+        }
+
+
+        /// <summary>
+        /// Deletes (soft delete) an asset status
+        /// </summary>
+        [HttpDelete("asset-status/{id}")]
+        public async Task<IActionResult> DeleteAssetStatus(int id)
+        {
+            var deleted = await _assetStatusService.DeleteAsync(id);
+            return deleted ? Ok() : NotFound();
+        }
+
 
     }
 }

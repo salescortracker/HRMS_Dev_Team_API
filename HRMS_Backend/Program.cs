@@ -33,6 +33,10 @@ builder.Services.AddScoped<IRoleMasterService, RoleMasterService>();
 builder.Services.AddScoped<IMenuRoleService, MenuRoleService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDesignationService, DesignationService>();
+builder.Services.AddScoped<IAssetStatusService, AssetStatusService>();
+builder.Services.AddScoped<IGenderService, GenderService>();
+builder.Services.AddScoped<IAssetService, AssetService>();  
+builder.Services.AddScoped<IAssetApprovalService, AssetApprovalService>();
 
 builder.Services.AddScoped<IEmployeeEducationService, EmployeeEducationService>();
 builder.Services.AddScoped<IEmployeeCertificationService, EmployeeCertificationService>();
