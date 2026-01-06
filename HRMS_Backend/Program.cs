@@ -37,6 +37,7 @@ builder.Services.AddScoped<IAssetStatusService, AssetStatusService>();
 builder.Services.AddScoped<IGenderService, GenderService>();
 builder.Services.AddScoped<IAssetService, AssetService>();  
 builder.Services.AddScoped<IAssetApprovalService, AssetApprovalService>();
+builder.Services.AddScoped<ICertificationTypeService, CertificationTypeService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

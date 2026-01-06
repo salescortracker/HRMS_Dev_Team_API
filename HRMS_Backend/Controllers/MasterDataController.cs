@@ -15,8 +15,9 @@ namespace HRMS_Backend.Controllers
         private readonly IDesignationService _designationService;
         //private readonly IBloodGroupService _bloodGroupservice;
         private readonly IAssetStatusService _assetStatusService;
+        private readonly ICertificationTypeService _certificationTypeService;
 
-        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService,  ILogger<MasterDataController> logger, IAssetStatusService assetStatusService)
+        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService,  ILogger<MasterDataController> logger, IAssetStatusService assetStatusService, ICertificationTypeService certificationTypeService)
         {
             _service = service;
             _designationService = designationService;
@@ -24,6 +25,7 @@ namespace HRMS_Backend.Controllers
             //_bloodGroupservice = bloodGroupservice;
             _logger = logger;
             _assetStatusService = assetStatusService;
+            _certificationTypeService = certificationTypeService;
         }
         #region Departments
         // ✅ GET ALL (with optional filters later)
@@ -407,6 +409,82 @@ namespace HRMS_Backend.Controllers
             return deleted ? Ok() : NotFound();
         }
 
+        #region ===================== CERTIFICATION TYPES =====================
 
+        [HttpGet("certification-types")]
+        public async Task<IActionResult> GetCertificationTypes(
+            int companyId,
+            int regionId)
+        {
+            var result = await _certificationTypeService
+                .GetAllAsync(companyId, regionId);
+
+            return Ok(result);
+        }
+
+        [HttpGet("certification-types/{id:int}")]
+        public async Task<IActionResult> GetCertificationTypeById(int id)
+        {
+            var result = await _certificationTypeService.GetByIdAsync(id);
+
+            if (!result.Success)
+                return NotFound(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost("certification-types")]
+        public async Task<IActionResult> CreateCertificationType(
+            [FromBody] CreateUpdateCertificationTypeDto dto,
+            [FromQuery] int createdBy)
+        {
+            var result = await _certificationTypeService.CreateAsync(dto, createdBy);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPut("certification-types/{id:int}")]
+        public async Task<IActionResult> UpdateCertificationType(
+            int id,
+            [FromBody] CreateUpdateCertificationTypeDto dto,
+            [FromQuery] int modifiedBy)
+        {
+            var result = await _certificationTypeService
+                .UpdateAsync(id, dto, modifiedBy);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpDelete("certification-types/{id:int}")]
+        public async Task<IActionResult> DeleteCertificationType(int id)
+        {
+            var result = await _certificationTypeService.DeleteAsync(id);
+
+            if (!result.Success)
+                return NotFound(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost("certification-types/bulk")]
+        public async Task<IActionResult> BulkInsertCertificationTypes(
+            [FromBody] IEnumerable<CreateUpdateCertificationTypeDto> dtos,
+            [FromQuery] int createdBy)
+        {
+            var result = await _certificationTypeService
+                .BulkInsertAsync(dtos, createdBy);
+
+            return Ok(result);
+        }
+
+        #endregion
     }
+
 }
+
