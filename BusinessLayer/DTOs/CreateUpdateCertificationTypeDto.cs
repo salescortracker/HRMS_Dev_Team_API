@@ -6,16 +6,12 @@ using System.Threading.Tasks;
 
 namespace BusinessLayer.DTOs
 {
-    public class CertificationTypeDto
+    public class CreateUpdateCertificationTypeDto
     {
-        public int CertificationTypeID { get; set; }
         public int CompanyID { get; set; }
         public int RegionID { get; set; }
         public string CertificationTypeName { get; set; } = string.Empty;
         public string? Description { get; set; }
         public bool IsActive { get; set; }
-
-        public int CertificationTypeId { get; set; }
-
     }
 }
