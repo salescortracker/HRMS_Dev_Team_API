@@ -13,14 +13,20 @@ namespace HRMS_Backend.Controllers
         private readonly IGenderService _genderService;
         private readonly ILogger<MasterDataController> _logger;
         private readonly IDesignationService _designationService;
-        private readonly IBloodGroupService _bloodGroupservice;
-        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService, IBloodGroupService bloodGroupservice, ILogger<MasterDataController> logger)
+        //private readonly IBloodGroupService _bloodGroupservice;
+        private readonly IKpiCategoryService _kpiCategoryService;
+
+
+
+        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService,  ILogger<MasterDataController> logger, IKpiCategoryService kpiCategoryService)
         {
             _service = service;
             _designationService = designationService;
             _genderService = genderService;
-            _bloodGroupservice = bloodGroupservice;
+           
             _logger = logger;
+            _kpiCategoryService = kpiCategoryService;
+
         }
         #region Departments
         // ✅ GET ALL (with optional filters later)
@@ -355,7 +361,51 @@ namespace HRMS_Backend.Controllers
             return Ok(new { message = "Gender deleted successfully" });
         }
         #endregion
-        
+
+        // =====================================================
+        // KPI CATEGORY
+        // =====================================================
+
+        // GET ALL KPI CATEGORIES
+        [HttpGet("kpi-categories")]
+        public async Task<IActionResult> GetKpiCategories()
+        {
+            var result = await _kpiCategoryService.GetAll();
+            return Ok(result);
+        }
+
+
+        // GET KPI CATEGORY BY ID
+        [HttpGet("kpi-categories/{id:int}")]
+        public async Task<IActionResult> GetKpiCategoryById(int id)
+        {
+            var result = await _kpiCategoryService.GetByIdAsync(id);
+            return Ok(result);
+        }
+
+        // CREATE KPI CATEGORY
+        [HttpPost("kpi-categories")]
+        public async Task<IActionResult> CreateKpiCategory([FromBody] CreateUpdateKpiCategoryDto dto)
+        {
+            var result = await _kpiCategoryService.CreateAsync(dto);
+            return Ok(result);
+        }
+
+        // UPDATE KPI CATEGORY
+        [HttpPut("kpi-categories")]
+        public async Task<IActionResult> UpdateKpiCategory([FromBody] CreateUpdateKpiCategoryDto dto)
+        {
+            var result = await _kpiCategoryService.UpdateAsync(dto);
+            return Ok(result);
+        }
+
+        // DELETE KPI CATEGORY
+        [HttpDelete("kpi-categories/{id:int}")]
+        public async Task<IActionResult> DeleteKpiCategory(int id)
+        {
+            var result = await _kpiCategoryService.DeleteAsync(id);
+            return result.Success ? Ok(result) : NotFound(result);
+        }
 
     }
 }
