@@ -3,6 +3,7 @@ using BusinessLayer.Interfaces;
 using DataAccessLayer.DBContext;
 using DataAccessLayer.Repositories.GeneralRepository;
 using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<HRMSContext>(options =>
@@ -22,6 +23,7 @@ builder.Services.AddCors(options =>
                   .AllowAnyHeader();
         });
 });
+
 // Add services to the container.
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IGeneralRepository<>), typeof(GenericRepository<>));
@@ -33,6 +35,9 @@ builder.Services.AddScoped<IRoleMasterService, RoleMasterService>();
 builder.Services.AddScoped<IMenuRoleService, MenuRoleService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDesignationService, DesignationService>();
+builder.Services.AddScoped<IPolicyCategoryService, PolicyCategoryService>();
+builder.Services.AddScoped<IExpenseCategoryService, ExpenseCategoryService>();
+builder.Services.AddScoped<IEventService, EventService>();
 
 builder.Services.AddScoped<IEmployeeEducationService, EmployeeEducationService>();
 builder.Services.AddScoped<IEmployeeCertificationService, EmployeeCertificationService>();
@@ -46,7 +51,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
