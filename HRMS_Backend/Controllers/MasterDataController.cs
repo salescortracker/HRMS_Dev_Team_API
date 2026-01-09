@@ -15,10 +15,11 @@ namespace HRMS_Backend.Controllers
         private readonly IDesignationService _designationService;
         //private readonly IBloodGroupService _bloodGroupservice;
         private readonly IKpiCategoryService _kpiCategoryService;
+        private readonly IExpenseStatusService _expenseStatusService;
 
 
 
-        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService,  ILogger<MasterDataController> logger, IKpiCategoryService kpiCategoryService)
+        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService,  ILogger<MasterDataController> logger, IKpiCategoryService kpiCategoryService,IExpenseStatusService expenseStatusService)
         {
             _service = service;
             _designationService = designationService;
@@ -26,6 +27,7 @@ namespace HRMS_Backend.Controllers
            
             _logger = logger;
             _kpiCategoryService = kpiCategoryService;
+            _expenseStatusService = expenseStatusService;
 
         }
         #region Departments
@@ -406,6 +408,43 @@ namespace HRMS_Backend.Controllers
             var result = await _kpiCategoryService.DeleteAsync(id);
             return result.Success ? Ok(result) : NotFound(result);
         }
+        #region Expense Status
+        // =====================================================
+        // EXPENSE STATUS
+        // =====================================================
 
+        // GET ALL EXPENSE STATUS
+        [HttpGet("expense-status")]
+        public async Task<IActionResult> GetExpenseStatus()
+        {
+            var result = await _expenseStatusService.GetAllAsync();
+            return Ok(result);
+        }
+
+        // GET EXPENSE STATUS BY ID
+        [HttpGet("expense-status/{id:int}")]
+        public async Task<IActionResult> GetExpenseStatusById(int id)
+        {
+            var result = await _expenseStatusService.GetByIdAsync(id);
+            return Ok(result);
+        }
+
+        // CREATE + UPDATE (POST)
+        [HttpPost("expense-status")]
+        public async Task<IActionResult> SaveExpenseStatus([FromBody] CreateUpdateExpenseStatusDto dto)
+        {
+            var result = await _expenseStatusService.SaveAsync(dto);
+            return Ok(result);
+        }
+
+        // DELETE EXPENSE STATUS
+        [HttpDelete("expense-status/{id:int}")]
+        public async Task<IActionResult> DeleteExpenseStatus(int id)
+        {
+            var result = await _expenseStatusService.DeleteAsync(id);
+            return result.Success ? Ok(result) : NotFound(result);
+        }
+
+        #endregion
     }
 }
