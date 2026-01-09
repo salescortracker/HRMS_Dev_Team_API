@@ -1,4 +1,5 @@
 ﻿using BusinessLayer.DTOs;
+using BusinessLayer.Implementations;
 using BusinessLayer.Interfaces;
 using DataAccessLayer.DBContext;
 using Microsoft.AspNetCore.Identity.Data;
@@ -21,8 +22,9 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
+        private readonly IMaritalStatusService _maritalStatusService;
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IMaritalStatusService maritalStatusService)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -30,6 +32,7 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
+            _maritalStatusService = maritalStatusService;
         }
         public class BulkInsertRequest
         {
@@ -125,7 +128,7 @@ namespace HRMS_Backend.Controllers
         /// <returns></returns>
         /// 
         [HttpDelete("DeleteCompany/{id}")]
-       
+
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _companyService.DeleteCompanyAsync(id);
@@ -195,7 +198,7 @@ namespace HRMS_Backend.Controllers
                         });
 
                     // Add more entity cases as needed
-                    
+
 
                     default:
                         return BadRequest(new { Success = false, Message = "Unsupported entity type." });
@@ -320,7 +323,7 @@ namespace HRMS_Backend.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.UserId }, createdUser);
         }
 
-      
+
 
         [HttpPut("UpdateUser/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
@@ -368,7 +371,7 @@ namespace HRMS_Backend.Controllers
         /// </summary>
         [HttpGet("GetAllMenus")]
         public async Task<IActionResult> GetAllMenus()
-       {
+        {
             var menus = await _menuService.GetAllMenusAsync();
             return Ok(menus);
         }
@@ -605,6 +608,73 @@ namespace HRMS_Backend.Controllers
         }
         #endregion
 
+        #region Marital Status
 
+        // POST: api/MaritalStatus/get-all
+        [HttpPost("getall")]
+        public async Task<IActionResult> GetAllMaritalStatus()
+        {
+            var data = await _maritalStatusService.GetAllAsync();
+            return Ok(data);
+        }
+
+        // POST: api/MaritalStatus/create
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateMaritalStatus(
+            [FromForm] int companyId,
+            [FromForm] int regionId,
+            [FromForm] string maritalStatusName,
+            [FromForm] string? description,
+            [FromForm] bool isActive)
+        {
+            var dto = new MaritalStatusDto
+            {
+                CompanyId = companyId,
+                RegionId = regionId,
+                MaritalStatusName = maritalStatusName,
+                Description = description,
+                IsActive = isActive
+            };
+
+            await _maritalStatusService.CreateAsync(dto, 1);
+            return Ok(new { message = "Marital Status created successfully" });
+        }
+
+        // POST: api/MaritalStatus/update
+        [HttpPost("update")]
+        public async Task<IActionResult> UpdateMaritalStatus(
+            [FromForm] int id,
+            [FromForm] int companyId,
+            [FromForm] int regionId,
+            [FromForm] string maritalStatusName,
+            [FromForm] string? description,
+            [FromForm] bool isActive)
+        {
+            var dto = new MaritalStatusDto
+            {
+                CompanyId = companyId,
+                RegionId = regionId,
+                MaritalStatusName = maritalStatusName,
+                Description = description,
+                IsActive = isActive
+            };
+
+            var result = await _maritalStatusService.UpdateAsync(id, dto, 1);
+            return result
+                ? Ok(new { message = "Marital Status updated successfully" })
+                : NotFound();
+        }
+
+        // POST: api/MaritalStatus/delete
+        [HttpPost("delete")]
+        public async Task<IActionResult> DeleteMaritalStatus([FromForm] int id)
+        {
+            var result = await _maritalStatusService.DeleteAsync(id, 1);
+            return result
+                ? Ok(new { message = "Marital Status deleted successfully" })
+                : NotFound();
+        }
+
+        #endregion
     }
 }
