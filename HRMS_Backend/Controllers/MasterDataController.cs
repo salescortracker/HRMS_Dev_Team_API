@@ -13,14 +13,24 @@ namespace HRMS_Backend.Controllers
         private readonly IGenderService _genderService;
         private readonly ILogger<MasterDataController> _logger;
         private readonly IDesignationService _designationService;
-        private readonly IBloodGroupService _bloodGroupservice;
-        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService, IBloodGroupService bloodGroupservice, ILogger<MasterDataController> logger)
+        //private readonly IBloodGroupService _bloodGroupservice;
+        private readonly IKpiCategoryService _kpiCategoryService;
+        private readonly IExpenseStatusService _expenseStatusService;
+
+        private readonly ILeaveStatusService _leaveStatusService;   // ✅ NEW
+
+
+        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService,  ILogger<MasterDataController> logger, IKpiCategoryService kpiCategoryService,IExpenseStatusService expenseStatusService,ILeaveStatusService leaveStatusService)
         {
             _service = service;
             _designationService = designationService;
             _genderService = genderService;
-            _bloodGroupservice = bloodGroupservice;
+           
             _logger = logger;
+            _kpiCategoryService = kpiCategoryService;
+            _expenseStatusService = expenseStatusService;
+            _leaveStatusService = leaveStatusService;
+
         }
         #region Departments
         // ✅ GET ALL (with optional filters later)
@@ -355,7 +365,152 @@ namespace HRMS_Backend.Controllers
             return Ok(new { message = "Gender deleted successfully" });
         }
         #endregion
-        
+        #region kpicategory
+        // =====================================================
+        // KPI CATEGORY
+        // =====================================================
 
+        // GET ALL KPI CATEGORIES
+        [HttpGet("kpi-categories")]
+        public async Task<IActionResult> GetKpiCategories()
+        {
+            var result = await _kpiCategoryService.GetAll();
+            return Ok(result);
+        }
+
+
+        // GET KPI CATEGORY BY ID
+        [HttpGet("kpi-categories/{id:int}")]
+        public async Task<IActionResult> GetKpiCategoryById(int id)
+        {
+            var result = await _kpiCategoryService.GetByIdAsync(id);
+            return Ok(result);
+        }
+
+        // CREATE KPI CATEGORY
+        [HttpPost("kpi-categories")]
+        public async Task<IActionResult> CreateKpiCategory([FromBody] CreateUpdateKpiCategoryDto dto)
+        {
+            var result = await _kpiCategoryService.CreateAsync(dto);
+            return Ok(result);
+        }
+
+        // UPDATE KPI CATEGORY
+        [HttpPut("kpi-categories")]
+        public async Task<IActionResult> UpdateKpiCategory([FromBody] CreateUpdateKpiCategoryDto dto)
+        {
+            var result = await _kpiCategoryService.UpdateAsync(dto);
+            return Ok(result);
+        }
+
+        // DELETE KPI CATEGORY
+        [HttpDelete("kpi-categories/{id:int}")]
+        public async Task<IActionResult> DeleteKpiCategory(int id)
+        {
+            var result = await _kpiCategoryService.DeleteAsync(id);
+            return result.Success ? Ok(result) : NotFound(result);
+        }
+#endregion
+        #region Expense Status
+        // =====================================================
+        // EXPENSE STATUS
+        // =====================================================
+
+        // GET ALL EXPENSE STATUS
+        [HttpGet("expense-status")]
+        public async Task<IActionResult> GetExpenseStatus()
+        {
+            var result = await _expenseStatusService.GetAllAsync();
+            return Ok(result);
+        }
+
+        // GET EXPENSE STATUS BY ID
+        [HttpGet("expense-status/{id:int}")]
+        public async Task<IActionResult> GetExpenseStatusById(int id)
+        {
+            var result = await _expenseStatusService.GetByIdAsync(id);
+            return Ok(result);
+        }
+
+        // CREATE + UPDATE (POST)
+        [HttpPost("expense-status")]
+        public async Task<IActionResult> SaveExpenseStatus([FromBody] CreateUpdateExpenseStatusDto dto)
+        {
+            var result = await _expenseStatusService.SaveAsync(dto);
+            return Ok(result);
+        }
+
+        // DELETE EXPENSE STATUS
+        [HttpDelete("expense-status/{id:int}")]
+        public async Task<IActionResult> DeleteExpenseStatus(int id)
+        {
+            var result = await _expenseStatusService.DeleteAsync(id);
+            return result.Success ? Ok(result) : NotFound(result);
+        }
+
+        #endregion
+
+        // =====================================================
+        // LEAVE STATUS
+        // =====================================================
+
+        /// <summary>
+        /// Retrieve all Leave Status records
+        /// </summary>
+        /// <returns>List of Leave Status</returns>
+        [HttpGet("leave-status")]
+        public async Task<IActionResult> GetLeaveStatus()
+        {
+            var result = await _leaveStatusService.GetAllAsync();
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Retrieve Leave Status by ID
+        /// </summary>
+        /// <param name="id">Leave Status ID</param>
+        /// <returns>Leave Status details</returns>
+        [HttpGet("leave-status/{id:int}")]
+        public async Task<IActionResult> GetLeaveStatusById(int id)
+        {
+            var result = await _leaveStatusService.GetByIdAsync(id);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Create a new Leave Status
+        /// </summary>
+        /// <param name="dto">Leave Status data</param>
+        /// <returns>Success or failure message</returns>
+        [HttpPost("leave-status")]
+        public async Task<IActionResult> CreateLeaveStatus([FromBody] CreateUpdateLeaveStatusDto dto)
+        {
+            var result = await _leaveStatusService.CreateAsync(dto);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Update an existing Leave Status
+        /// </summary>
+        /// <param name="dto">Updated Leave Status data</param>
+        /// <returns>Success or failure message</returns>
+        [HttpPut("leave-status")]
+        public async Task<IActionResult> UpdateLeaveStatus([FromBody] CreateUpdateLeaveStatusDto dto)
+        {
+            var result = await _leaveStatusService.UpdateAsync(dto);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Delete Leave Status by ID
+        /// </summary>
+        /// <param name="id">Leave Status ID</param>
+        /// <returns>Success or not found message</returns>
+        [HttpDelete("leave-status/{id:int}")]
+        public async Task<IActionResult> DeleteLeaveStatus(int id)
+        {
+            var result = await _leaveStatusService.DeleteAsync(id);
+            return result.Success ? Ok(result) : NotFound(result);
+        }
     }
 }
