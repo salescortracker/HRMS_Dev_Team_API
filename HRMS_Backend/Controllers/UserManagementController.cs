@@ -21,8 +21,9 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
+        private readonly IRelationshipService _relationshipService;
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IRelationshipService relationshipService)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -30,6 +31,7 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
+            _relationshipService = relationshipService;
         }
         public class BulkInsertRequest
         {
@@ -125,7 +127,7 @@ namespace HRMS_Backend.Controllers
         /// <returns></returns>
         /// 
         [HttpDelete("DeleteCompany/{id}")]
-       
+
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _companyService.DeleteCompanyAsync(id);
@@ -195,7 +197,7 @@ namespace HRMS_Backend.Controllers
                         });
 
                     // Add more entity cases as needed
-                    
+
 
                     default:
                         return BadRequest(new { Success = false, Message = "Unsupported entity type." });
@@ -320,7 +322,7 @@ namespace HRMS_Backend.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.UserId }, createdUser);
         }
 
-      
+
 
         [HttpPut("UpdateUser/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
@@ -368,7 +370,7 @@ namespace HRMS_Backend.Controllers
         /// </summary>
         [HttpGet("GetAllMenus")]
         public async Task<IActionResult> GetAllMenus()
-       {
+        {
             var menus = await _menuService.GetAllMenusAsync();
             return Ok(menus);
         }
@@ -605,6 +607,74 @@ namespace HRMS_Backend.Controllers
         }
         #endregion
 
+        //------relationship status controller------
+        
+        #region Relationship Status (POST ONLY)
+
+        /*
+         * GET ALL
+         * Form style: no body needed
+         */
+        [HttpPost("relationshipstatus/getall")]
+        public async Task<IActionResult> RelationshipStatusGetAll()
+        {
+            var result = await _relationshipService.GetAllAsync();
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        /*
+         * GET BY ID
+         * Form style: id passed as form/query
+         */
+        [HttpPost("relationshipstatus/get-by-id")]
+        public async Task<IActionResult> RelationshipStatusGetById([FromForm] int id)
+        {
+            var result = await _relationshipService.GetByIdAsync(id);
+            return result.Success ? Ok(result) : NotFound(result);
+        }
+
+        /*
+         * CREATE
+         * Form-data supported
+         */
+        [HttpPost("relationshipstatus/create")]
+        public async Task<IActionResult> RelationshipStatusCreate([FromForm] RelationshipDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _relationshipService.CreateAsync(dto, "1"); // TEMP createdBy
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        /*
+         * UPDATE
+         * Form-data supported
+         */
+        [HttpPost("relationshipstatus/update")]
+        public async Task<IActionResult> RelationshipStatusUpdate([FromForm] int id, [FromForm] RelationshipDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _relationshipService.UpdateAsync(id, dto, "1"); // TEMP modifiedBy
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        /*
+         * DELETE (SOFT DELETE)
+         * Form style
+         */
+        [HttpPost("relationshipstatus/delete")]
+        public async Task<IActionResult> RelationshipStatusDelete([FromForm] int id)
+        {
+            var result = await _relationshipService.SoftDeleteAsync(id, "1"); // TEMP modifiedBy
+            return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        #endregion
+
+
 
     }
-}
+}        
