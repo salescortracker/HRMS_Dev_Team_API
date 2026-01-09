@@ -17,9 +17,10 @@ namespace HRMS_Backend.Controllers
         private readonly IKpiCategoryService _kpiCategoryService;
         private readonly IExpenseStatusService _expenseStatusService;
 
+        private readonly ILeaveStatusService _leaveStatusService;   // ✅ NEW
 
 
-        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService,  ILogger<MasterDataController> logger, IKpiCategoryService kpiCategoryService,IExpenseStatusService expenseStatusService)
+        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService,  ILogger<MasterDataController> logger, IKpiCategoryService kpiCategoryService,IExpenseStatusService expenseStatusService,ILeaveStatusService leaveStatusService)
         {
             _service = service;
             _designationService = designationService;
@@ -28,6 +29,7 @@ namespace HRMS_Backend.Controllers
             _logger = logger;
             _kpiCategoryService = kpiCategoryService;
             _expenseStatusService = expenseStatusService;
+            _leaveStatusService = leaveStatusService;
 
         }
         #region Departments
@@ -363,7 +365,7 @@ namespace HRMS_Backend.Controllers
             return Ok(new { message = "Gender deleted successfully" });
         }
         #endregion
-
+        #region kpicategory
         // =====================================================
         // KPI CATEGORY
         // =====================================================
@@ -408,6 +410,7 @@ namespace HRMS_Backend.Controllers
             var result = await _kpiCategoryService.DeleteAsync(id);
             return result.Success ? Ok(result) : NotFound(result);
         }
+#endregion
         #region Expense Status
         // =====================================================
         // EXPENSE STATUS
@@ -446,5 +449,68 @@ namespace HRMS_Backend.Controllers
         }
 
         #endregion
+
+        // =====================================================
+        // LEAVE STATUS
+        // =====================================================
+
+        /// <summary>
+        /// Retrieve all Leave Status records
+        /// </summary>
+        /// <returns>List of Leave Status</returns>
+        [HttpGet("leave-status")]
+        public async Task<IActionResult> GetLeaveStatus()
+        {
+            var result = await _leaveStatusService.GetAllAsync();
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Retrieve Leave Status by ID
+        /// </summary>
+        /// <param name="id">Leave Status ID</param>
+        /// <returns>Leave Status details</returns>
+        [HttpGet("leave-status/{id:int}")]
+        public async Task<IActionResult> GetLeaveStatusById(int id)
+        {
+            var result = await _leaveStatusService.GetByIdAsync(id);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Create a new Leave Status
+        /// </summary>
+        /// <param name="dto">Leave Status data</param>
+        /// <returns>Success or failure message</returns>
+        [HttpPost("leave-status")]
+        public async Task<IActionResult> CreateLeaveStatus([FromBody] CreateUpdateLeaveStatusDto dto)
+        {
+            var result = await _leaveStatusService.CreateAsync(dto);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Update an existing Leave Status
+        /// </summary>
+        /// <param name="dto">Updated Leave Status data</param>
+        /// <returns>Success or failure message</returns>
+        [HttpPut("leave-status")]
+        public async Task<IActionResult> UpdateLeaveStatus([FromBody] CreateUpdateLeaveStatusDto dto)
+        {
+            var result = await _leaveStatusService.UpdateAsync(dto);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Delete Leave Status by ID
+        /// </summary>
+        /// <param name="id">Leave Status ID</param>
+        /// <returns>Success or not found message</returns>
+        [HttpDelete("leave-status/{id:int}")]
+        public async Task<IActionResult> DeleteLeaveStatus(int id)
+        {
+            var result = await _leaveStatusService.DeleteAsync(id);
+            return result.Success ? Ok(result) : NotFound(result);
+        }
     }
 }
