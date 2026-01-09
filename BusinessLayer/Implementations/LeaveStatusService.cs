@@ -84,25 +84,29 @@ namespace BusinessLayer.Implementations
                 return new ApiResponse<string>("Leave Status created successfully.");
             }
 
-            public async Task<ApiResponse<string>> UpdateAsync(CreateUpdateLeaveStatusDto dto)
-            {
-                var entity = await _unitOfWork.Repository<LeaveStatus>().GetByIdAsync(dto.LeaveStatusID);
+        public async Task<ApiResponse<string>> UpdateAsync(CreateUpdateLeaveStatusDto dto)
+        {
+            var entity = await _unitOfWork.Repository<LeaveStatus>().GetByIdAsync(dto.LeaveStatusID);
 
-                if (entity == null || entity.IsDeleted)
-                    return new ApiResponse<string>(null!, "Leave Status not found.", false);
+            if (entity == null || entity.IsDeleted)
+                return new ApiResponse<string>(null!, "Leave Status not found.", false);
 
-                entity.LeaveStatusName = dto.LeaveStatusName;
-                entity.Description = dto.Description;
-                entity.IsActive = dto.IsActive;
-                entity.ModifiedAt = DateTime.UtcNow;
+            // Update all fields including Company and Region
+            entity.CompanyId = dto.CompanyID;
+            entity.RegionId = dto.RegionID;
+            entity.LeaveStatusName = dto.LeaveStatusName;
+            entity.Description = dto.Description;
+            entity.IsActive = dto.IsActive;
+            entity.ModifiedAt = DateTime.UtcNow;
 
-                _unitOfWork.Repository<LeaveStatus>().Update(entity);
-                await _unitOfWork.CompleteAsync();
+            _unitOfWork.Repository<LeaveStatus>().Update(entity);
+            await _unitOfWork.CompleteAsync();
 
-                return new ApiResponse<string>("Leave Status updated successfully.");
-            }
+            return new ApiResponse<string>("Leave Status updated successfully.");
+        }
 
-            public async Task<ApiResponse<string>> DeleteAsync(int id)
+
+        public async Task<ApiResponse<string>> DeleteAsync(int id)
             {
                 var entity = await _unitOfWork.Repository<LeaveStatus>().GetByIdAsync(id);
 

@@ -146,7 +146,7 @@ namespace BusinessLayer.Implementations
                 if (entity == null || entity.IsDeleted)
                     return new ApiResponse<string>(null!, "KPI Category not found.", false);
 
-                // Duplicate check
+                // Duplicate check: ignore current record
                 var duplicate = (await _unitOfWork.Repository<KpiCategory>().FindAsync(x =>
                     !x.IsDeleted &&
                     x.KpiCategoryId != dto.KpiCategoryID &&
@@ -159,9 +159,14 @@ namespace BusinessLayer.Implementations
                 if (duplicate)
                     return new ApiResponse<string>(null!, "Duplicate KPI Category exists.", false);
 
+                // -----------------------------
+                // Update fields including Company and Region
+                // -----------------------------
                 entity.KpiCategoryName = dto.KpiCategoryName;
                 entity.Description = dto.Description;
                 entity.IsActive = dto.IsActive;
+                entity.CompanyId = dto.CompanyID;  // ✅ Update Company
+                entity.RegionId = dto.RegionID;    // ✅ Update Region
                 entity.ModifiedAt = DateTime.UtcNow;
 
                 _unitOfWork.Repository<KpiCategory>().Update(entity);

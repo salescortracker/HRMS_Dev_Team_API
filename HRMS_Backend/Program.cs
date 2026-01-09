@@ -42,6 +42,7 @@ builder.Services.AddScoped<IEmployeeResignationService, EmployeeResignationServi
 builder.Services.AddScoped<IKpiCategoryService, KpiCategoryService>();
 builder.Services.AddScoped<IExpenseStatusService, ExpenseStatusService>();
 builder.Services.AddScoped<ILeaveStatusService, LeaveStatusService>();
+builder.Services.AddScoped<IAttendanceStatusService, AttendanceStatusService>();
 
 builder.Services.AddScoped<IGenderService, GenderService>();
 //builder.Services.AddScoped<IBloodGroupService, BloodGroupService>();

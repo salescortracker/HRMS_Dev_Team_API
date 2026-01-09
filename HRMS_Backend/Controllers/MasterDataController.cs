@@ -18,9 +18,11 @@ namespace HRMS_Backend.Controllers
         private readonly IExpenseStatusService _expenseStatusService;
 
         private readonly ILeaveStatusService _leaveStatusService;   // ✅ NEW
+        private readonly IAttendanceStatusService _attendanceStatusService;
 
 
-        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService,  ILogger<MasterDataController> logger, IKpiCategoryService kpiCategoryService,IExpenseStatusService expenseStatusService,ILeaveStatusService leaveStatusService)
+
+        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService,  ILogger<MasterDataController> logger, IKpiCategoryService kpiCategoryService,IExpenseStatusService expenseStatusService,ILeaveStatusService leaveStatusService, IAttendanceStatusService attendanceStatusService)
         {
             _service = service;
             _designationService = designationService;
@@ -30,6 +32,7 @@ namespace HRMS_Backend.Controllers
             _kpiCategoryService = kpiCategoryService;
             _expenseStatusService = expenseStatusService;
             _leaveStatusService = leaveStatusService;
+            _attendanceStatusService = attendanceStatusService;
 
         }
         #region Departments
@@ -450,6 +453,8 @@ namespace HRMS_Backend.Controllers
 
         #endregion
 
+        #region leavestatus
+
         // =====================================================
         // LEAVE STATUS
         // =====================================================
@@ -512,5 +517,82 @@ namespace HRMS_Backend.Controllers
             var result = await _leaveStatusService.DeleteAsync(id);
             return result.Success ? Ok(result) : NotFound(result);
         }
+        #endregion
+
+        #region Attendance Status
+
+        /// <summary>
+        /// Retrieve all Attendance Status records
+        /// </summary>
+        /// <returns>List of Attendance Status</returns>
+        [HttpGet("GetAttendanceStatus")]
+        public async Task<IActionResult> GetAttendanceStatus()
+        {
+            var result = await _attendanceStatusService.GetAllAsync();
+            return Ok(result);
+        }
+        /// <summary>
+        /// Retrieve Attendance Status by ID
+        /// </summary>
+        /// <param name="id">Attendance Status ID</param>
+        /// <returns>Attendance Status details</returns>
+        [HttpGet("GetAttendanceStatusById/{id}")]
+        public async Task<IActionResult> GetAttendanceStatusById(int id)
+        {
+            var result = await _attendanceStatusService.GetByIdAsync(id);
+
+            if (!result.Success)
+                return NotFound(result);
+
+            return Ok(result);
+        }
+        /// <summary>
+        /// Create new Attendance Status
+        /// </summary>
+        /// <param name="dto">Attendance Status details</param>
+        /// <returns>Success message</returns>
+        [HttpPost("CreateAttendanceStatus")]
+        public async Task<IActionResult> CreateAttendanceStatus([FromBody] CreateUpdateAttendanceStatusDto dto)
+        {
+            var result = await _attendanceStatusService.CreateAsync(dto);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+        /// <summary>
+        /// Update existing Attendance Status
+        /// </summary>
+        /// <param name="dto">Attendance Status details</param>
+        /// <returns>Success message</returns>
+        [HttpPut("UpdateAttendanceStatus")]
+        public async Task<IActionResult> UpdateAttendanceStatus([FromBody] CreateUpdateAttendanceStatusDto dto)
+        {
+            var result = await _attendanceStatusService.UpdateAsync(dto);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+        /// <summary>
+        /// Delete Attendance Status by ID
+        /// </summary>
+        /// <param name="id">Attendance Status ID</param>
+        /// <returns>Success message</returns>
+        [HttpDelete("DeleteAttendanceStatus/{id}")]
+        public async Task<IActionResult> DeleteAttendanceStatus(int id)
+        {
+            var result = await _attendanceStatusService.DeleteAsync(id);
+
+            if (!result.Success)
+                return NotFound(result);
+
+            return Ok(result);
+        }
+
+        #endregion
+
     }
 }

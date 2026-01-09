@@ -78,6 +78,9 @@ namespace BusinessLayer.Implementations
         // -----------------------------
         // CREATE + UPDATE (POST)
         // -----------------------------
+        // -----------------------------
+        // CREATE + UPDATE (POST)
+        // -----------------------------
         public async Task<ApiResponse<string>> SaveAsync(CreateUpdateExpenseStatusDto dto)
         {
             try
@@ -125,6 +128,9 @@ namespace BusinessLayer.Implementations
                     if (entity == null || entity.IsDeleted)
                         return new ApiResponse<string>(null!, "Expense Status not found.", false);
 
+                    // ✅ Update Company and Region as well
+                    entity.CompanyId = dto.CompanyID;
+                    entity.RegionId = dto.RegionID;
                     entity.ExpenseStatusName = dto.ExpenseStatusName;
                     entity.IsActive = dto.IsActive;
                     entity.ModifiedAt = DateTime.UtcNow;
@@ -144,6 +150,7 @@ namespace BusinessLayer.Implementations
                 );
             }
         }
+
 
         // -----------------------------
         // DELETE (HARD DELETE)
