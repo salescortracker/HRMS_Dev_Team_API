@@ -21,8 +21,9 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
+        private readonly ITaxSettingsService _taxSettingsService;
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, ITaxSettingsService taxSettingsService)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -30,6 +31,8 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
+            _taxSettingsService = taxSettingsService;
+            
         }
         public class BulkInsertRequest
         {
@@ -125,7 +128,7 @@ namespace HRMS_Backend.Controllers
         /// <returns></returns>
         /// 
         [HttpDelete("DeleteCompany/{id}")]
-       
+
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _companyService.DeleteCompanyAsync(id);
@@ -195,7 +198,7 @@ namespace HRMS_Backend.Controllers
                         });
 
                     // Add more entity cases as needed
-                    
+
 
                     default:
                         return BadRequest(new { Success = false, Message = "Unsupported entity type." });
@@ -320,7 +323,7 @@ namespace HRMS_Backend.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.UserId }, createdUser);
         }
 
-      
+
 
         [HttpPut("UpdateUser/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
@@ -368,7 +371,7 @@ namespace HRMS_Backend.Controllers
         /// </summary>
         [HttpGet("GetAllMenus")]
         public async Task<IActionResult> GetAllMenus()
-       {
+        {
             var menus = await _menuService.GetAllMenusAsync();
             return Ok(menus);
         }
@@ -605,6 +608,68 @@ namespace HRMS_Backend.Controllers
         }
         #endregion
 
+        #region Tax Settings Management (All POST / FormData)
 
+        // POST: Get Tax Types (form POST)
+        [HttpPost("GetTaxTypes")]
+        public async Task<IActionResult> GetTaxTypes([FromForm] int? dummy = null)
+        {
+            var result = await _taxSettingsService.GetTaxTypesAsync();
+            return Ok(new { Success = true, Data = result });
+        }
+
+        // POST: Save Tax Settings
+        [HttpPost("SaveTaxSettings")]
+        public async Task<IActionResult> SaveTaxSettings([FromForm] TaxSettingsDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { Success = false, Message = "Invalid data" });
+
+            var isSaved = await _taxSettingsService.SaveTaxSettingsAsync(dto);
+
+            if (!isSaved)
+                return BadRequest(new { Success = false, Message = "Failed to save tax settings" });
+
+            return Ok(new { Success = true, Message = "Tax settings saved successfully" });
+        }
+
+        // POST: Get All Tax Settings
+        [HttpPost("GetAllTaxSettings")]
+        public async Task<IActionResult> GetAllTaxSettings([FromForm] int? dummy = null)
+        {
+            var result = await _taxSettingsService.GetAllTaxSettingsAsync();
+            return Ok(new { Success = true, Data = result });
+        }
+
+        // POST: Update Tax Settings
+        [HttpPost("UpdateTaxSettings")]
+        public async Task<IActionResult> UpdateTaxSettings([FromForm] int id, [FromForm] TaxSettingsDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { Success = false, Message = "Invalid data" });
+
+            var updated = await _taxSettingsService.UpdateTaxSettingsAsync(id, dto);
+
+            if (updated == null)
+                return NotFound(new { Success = false, Message = "Tax settings not found" });
+
+            return Ok(new { Success = true, Message = "Tax settings updated successfully", Data = updated });
+        }
+
+        // POST: Delete Tax Settings
+        [HttpPost("DeleteTaxSettings")]
+        public async Task<IActionResult> DeleteTaxSettings([FromForm] int id)
+        {
+            var deleted = await _taxSettingsService.DeleteTaxSettingsAsync(id);
+
+            if (!deleted)
+                return NotFound(new { Success = false, Message = "Tax settings not found or already deleted" });
+
+            return Ok(new { Success = true, Message = "Tax settings deleted successfully" });
+        }
+
+        #endregion
     }
 }
+
+    
