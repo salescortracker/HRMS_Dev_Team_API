@@ -46,6 +46,7 @@ builder.Services.AddScoped<IEmployeePersonalService, EmployeePersonalService>();
 builder.Services.AddScoped<ICompanyNewsService, CompanyNewsService>();
 builder.Services.AddScoped<IGenderService, GenderService>();
 builder.Services.AddScoped<ICategoryServicecs, CategoryService>();
+builder.Services.AddScoped<IBloodGroupService, BloodGroupService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

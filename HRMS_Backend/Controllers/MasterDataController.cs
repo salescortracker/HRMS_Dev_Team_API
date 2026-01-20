@@ -16,9 +16,10 @@ namespace HRMS_Backend.Controllers
         private readonly ICompanyNewsService _companyNewsService;
         private readonly IWebHostEnvironment _env;
         private readonly ICategoryServicecs _categoryService;
+        private readonly IBloodGroupService _bloodGroupService;
 
 
-        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService, IBloodGroupService bloodGroupservice, ILogger<MasterDataController> logger, ICompanyNewsService companyNewsService, IWebHostEnvironment env, ICategoryServicecs categoryService)
+        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService, IBloodGroupService bloodGroupservice, ILogger<MasterDataController> logger, ICompanyNewsService companyNewsService, IWebHostEnvironment env, ICategoryServicecs categoryService,IBloodGroupService bloodGroupService)
         {
             _service = service;
             _designationService = designationService;
@@ -26,6 +27,7 @@ namespace HRMS_Backend.Controllers
             _companyNewsService = companyNewsService;
             _logger = logger;
             _env = env;
+            _bloodGroupService = bloodGroupservice; // ✅ MISSING LINE (VERY IMPORTANT)
             _categoryService = categoryService;
         }
         #region Departments
@@ -361,6 +363,70 @@ namespace HRMS_Backend.Controllers
             return Ok(new { message = "Gender deleted successfully" });
         }
         #endregion
+
+        // ======================================
+        // BLOOD GROUP MASTER
+        // ======================================
+
+        // GET: api/MasterData/bloodgroups
+        [HttpGet("bloodgroups")]
+        public async Task<IActionResult> GetBloodGroups()
+        {
+            var data = await _bloodGroupService.GetAllAsync();
+            return Ok(data);
+        }
+        // GET: api/MasterData/bloodgroups/5
+        [HttpGet("bloodgroups/{id:int}")]
+        public async Task<IActionResult> GetBloodGroupById(int id)
+        {
+            var data = await _bloodGroupService.GetByIdAsync(id);
+            if (data == null)
+                return NotFound(new { message = "Blood group not found" });
+
+            return Ok(data);
+        }
+
+        // POST: api/MasterData/bloodgroups
+        [HttpPost("bloodgroups")]
+        public async Task<IActionResult> CreateBloodGroup([FromBody] BloodGroupDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _bloodGroupService.CreateAsync(dto);
+            return Ok(new { message = result });
+        }
+
+        // PUT: api/MasterData/bloodgroups/5
+        [HttpPut("bloodgroups/{id:int}")]
+        public async Task<IActionResult> UpdateBloodGroup(
+            int id,
+            [FromBody] BloodGroupDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            dto.BloodGroupId = id;
+
+            var result = await _bloodGroupService.UpdateAsync(dto);
+
+            if (result == "Blood group not found")
+                return NotFound(new { message = result });
+
+            return Ok(new { message = result });
+        }
+
+        // DELETE: api/MasterData/bloodgroups/5
+        [HttpDelete("bloodgroups/{id:int}")]
+        public async Task<IActionResult> DeleteBloodGroup(int id)
+        {
+            var result = await _bloodGroupService.DeleteAsync(id);
+
+            if (result == "Blood group not found")
+                return NotFound(new { message = result });
+
+            return Ok(new { message = result });
+        }
 
         // ================= COMPANY NEWS =================
 
