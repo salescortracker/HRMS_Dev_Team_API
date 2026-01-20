@@ -13,14 +13,17 @@ namespace HRMS_Backend.Controllers
         private readonly IGenderService _genderService;
         private readonly ILogger<MasterDataController> _logger;
         private readonly IDesignationService _designationService;
-        private readonly IBloodGroupService _bloodGroupservice;
-        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService, IBloodGroupService bloodGroupservice, ILogger<MasterDataController> logger)
+        
+        private readonly ILeaveTypeService _leaveTypeService;
+        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService, 
+            ILeaveTypeService leaveTypeService, ILogger<MasterDataController> logger)
         {
             _service = service;
             _designationService = designationService;
             _genderService = genderService;
-            _bloodGroupservice = bloodGroupservice;
+           
             _logger = logger;
+            _leaveTypeService = leaveTypeService;
         }
         #region Departments
         // ✅ GET ALL (with optional filters later)
@@ -355,7 +358,45 @@ namespace HRMS_Backend.Controllers
             return Ok(new { message = "Gender deleted successfully" });
         }
         #endregion
-        
+
+
+        #region LeaveType
+        [HttpGet("GetLeaveType")]
+        public async Task<IActionResult> GetLeaveType()
+        {
+            // call service without parameters
+            var data = await _leaveTypeService.GetLeaveTypesAsync();
+            return Ok(data);
+        }
+
+        [HttpPost("CreateLeaveType")]
+        public async Task<IActionResult> CreateLeaveType([FromBody] LeaveTypeDto dto)
+        {
+            var result = await _leaveTypeService.CreateLeaveTypeAsync(dto);
+            return result ? Ok() : BadRequest();
+        }
+
+        [HttpPut("UpdateLeaveType")]
+        public async Task<IActionResult> UpdateLeaveType([FromBody] LeaveTypeDto dto)
+        {
+            var result = await _leaveTypeService.UpdateLeaveTypeAsync(dto);
+            return result ? Ok() : BadRequest();
+        }
+
+        [HttpDelete("DeleteLeaveType/{id:int}")]
+        public async Task<IActionResult> DeleteLeaveType(int id)
+        {
+            var result = await _leaveTypeService.DeleteLeaveTypeAsync(id);
+
+            if (!result)
+                return NotFound("Leave Type not found or already deleted");
+
+            return Ok(new { message = "Leave Type deleted successfully" });
+        }
+
+
+
+        #endregion
 
     }
 }
