@@ -381,6 +381,32 @@
   },
   {
     "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
+    "Method": "GetCaptcha",
+    "RelativePath": "api/UserManagement/captcha",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
+    "Method": "ChangePassword",
+    "RelativePath": "api/UserManagement/change-password",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "BusinessLayer.DTOs.PasswordChangeDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HRMS_Backend.Controllers.UserManagementController",
     "Method": "CreateMenu",
     "RelativePath": "api/UserManagement/CreateMenu",
     "HttpMethod": "POST",

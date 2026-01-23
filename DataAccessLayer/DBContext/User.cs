@@ -40,4 +40,6 @@ public partial class User
     public virtual Company Company { get; set; } = null!;
 
     public virtual Region Region { get; set; } = null!;
+
+    public virtual UserLoginStatus? UserLoginStatus { get; set; }
 }

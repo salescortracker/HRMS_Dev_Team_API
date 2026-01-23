@@ -17,11 +17,26 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: corsPolicyName,
         policy =>
         {
-            policy.AllowAnyOrigin()
+            policy.WithOrigins("http://localhost:4200")
                   .AllowAnyMethod()
-                  .AllowAnyHeader();
+                  .AllowAnyHeader()
+                  .AllowCredentials();
         });
 });
+
+
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(20);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.None;   // <-- REQUIRED
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; //
+});
+
+
 // Add services to the container.
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped(typeof(IGeneralRepository<>), typeof(GenericRepository<>));
@@ -35,6 +50,7 @@ builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDesignationService, DesignationService>();
 builder.Services.AddScoped<IRaiseTicketService, RaiseTicketService>();
 builder.Services.AddScoped<ITicketApprovalService, TicketApprovalService>();
+builder.Services.AddScoped<ICaptchaService, CaptchaService>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -53,6 +69,7 @@ if (app.Environment.IsDevelopment())
 // --------------------
 app.UseCors(corsPolicyName);
 app.UseHttpsRedirection();
+app.UseSession();
 
 app.UseAuthorization();
 

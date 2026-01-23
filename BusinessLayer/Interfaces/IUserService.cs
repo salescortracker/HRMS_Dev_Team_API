@@ -1,4 +1,5 @@
-﻿using BusinessLayer.DTOs;
+﻿using BusinessLayer.Common;
+using BusinessLayer.DTOs;
 using DataAccessLayer.DBContext;
 
 namespace BusinessLayer.Interfaces
@@ -11,5 +12,7 @@ namespace BusinessLayer.Interfaces
         Task<User?> UpdateUserAsync(int id, User updatedUser);
         Task<bool> DeleteUserAsync(int id);
         Task<object?> VerifyLoginAsync(string username, string password);
+
+        Task<ApiResponse<bool>> ChangePasswordAsync(PasswordChangeDto passwordDto);
     }
 }

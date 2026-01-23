@@ -1,4 +1,6 @@
-﻿using BusinessLayer.DTOs;
+﻿using BusinessLayer.Common;
+using BusinessLayer.DTOs;
+using BusinessLayer.Implementations;
 using BusinessLayer.Interfaces;
 using DataAccessLayer.DBContext;
 using Microsoft.AspNetCore.Identity.Data;
@@ -23,8 +25,9 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuRoleService _menuRoleService;
         private readonly IRaiseTicketService _raiseTicketService;
         private readonly ITicketApprovalService _raiseTicketApprovalService;
+        public readonly ICaptchaService _captchaService;
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IRaiseTicketService raiseTicketService, ITicketApprovalService raiseTicketApprovalService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IRaiseTicketService raiseTicketService, ITicketApprovalService raiseTicketApprovalService, ICaptchaService captchaService   )
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -34,6 +37,7 @@ namespace HRMS_Backend.Controllers
             _menuRoleService = menuRoleService;
             _raiseTicketService = raiseTicketService;
             _raiseTicketApprovalService = raiseTicketApprovalService;
+            _captchaService = captchaService;
         }
         public class BulkInsertRequest
         {
@@ -365,6 +369,50 @@ namespace HRMS_Backend.Controllers
             }
         }
 
+        [HttpPost("change-password")]
+        public async Task<IActionResult> ChangePassword(PasswordChangeDto dto)
+        {
+            try
+            {
+                var temp = dto.CaptchaToken;
+
+                var storedCaptcha = HttpContext.Session.GetString("CaptchaCode");
+
+             
+                if (storedCaptcha == null || dto.CaptchaToken != storedCaptcha)
+                    return BadRequest(new { message = "Invalid CAPTCHA" });
+
+
+                var result = await _userService.ChangePasswordAsync(dto);
+
+                if (!result.Success)
+                    return BadRequest(result);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Change Password failed: {ex.Message}");
+                return StatusCode(500, new ApiResponse<string>(null,
+                    "An error occurred while changing your password.", false));
+            }
+        }
+
+        [HttpGet("captcha")]
+        public IActionResult GetCaptcha([FromServices] ICaptchaService captchaService)
+        {
+            
+            var (code, imageBytes) = captchaService.GenerateCaptcha();
+
+            HttpContext.Session.SetString("CaptchaCode", code);
+            var stored = HttpContext.Session.GetString("CaptchaCode");
+            Console.WriteLine("Stored CAPTCHA in session: " + stored);
+
+
+
+            return File(imageBytes, "image/png");
+
+        }
         #endregion
         #region Menu Master Details
         /// <summary>

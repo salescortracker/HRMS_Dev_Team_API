@@ -1,10 +1,13 @@
-﻿using BusinessLayer.DTOs;
+﻿using BCrypt.Net;
+using BusinessLayer.Common;
+using BusinessLayer.DTOs;
 using BusinessLayer.Interfaces;
 using DataAccessLayer.DBContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Net;
 using System.Net.Mail;
+using System.Runtime.Intrinsics.Arm;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -42,6 +45,8 @@ namespace BusinessLayer.Implementations
                 // ✅ Auto-generate Employee Code if not provided
                 string newEmployeeCode = userDto.EmployeeCode ?? await GenerateNextEmployeeCodeAsync();
 
+
+
                 // ✅ Hash Password
                 string hashedPassword = HashPassword(userDto.Password);
 
@@ -53,13 +58,23 @@ namespace BusinessLayer.Implementations
                     EmployeeCode = newEmployeeCode,
                     FullName = userDto.FullName,
                     Email = userDto.Email,
-                    PasswordHash = userDto.Password,
+                    PasswordHash = hashedPassword,
                     RoleId = userDto.RoleId,
                     Status = "Active",
                     CreatedDate = DateTime.UtcNow
                 };
 
                 _context.Users.Add(user);
+                await _context.SaveChangesAsync();
+
+                var loginStatus = new UserLoginStatus
+                {
+                    UserId = user.UserId,
+                    MustChangePassword = true
+
+                };
+
+                _context.UserLoginStatuses.Add(loginStatus);
                 await _context.SaveChangesAsync();
 
                 // ✅ Send Welcome Email
@@ -75,6 +90,8 @@ namespace BusinessLayer.Implementations
                 throw ex;
             }
         }
+
+    
         public async Task<object?> VerifyLoginAsync(string username, string password)
         {
             try
@@ -82,11 +99,38 @@ namespace BusinessLayer.Implementations
                 if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
                     throw new ArgumentException("Username or password cannot be empty.");
 
+
+                Console.WriteLine("Verifying login for user: " + username);
+                Console.WriteLine("Password provided: " + password);
+                //1. Get user by email
+                var user = await _context.Users
+                    .Include(u => u.UserLoginStatus)
+                    .FirstOrDefaultAsync(u => u.Email == username);
+                Console.WriteLine("User: " + user);
+
+                if (user == null)
+                    return null;
+
+                // 2. Detect Hashing Scheme
+              
+                string incomingHash = HashPassword(password);
+                Console.WriteLine("Incoming Hash: " + incomingHash);
+
+                // 3.Verify password
+                if (user.PasswordHash != incomingHash)
+                  return null;
+
+                // 4. Compute mustChangePassword OUTSIDE the LINQ query
+                bool mustChangePassword = user.UserLoginStatus?.MustChangePassword ?? false;
+
+
+
+                // 5. Fetch joined data
                 var userData = await (from u in _context.Users
                                       join r in _context.RoleMasters on u.RoleId equals r.RoleId
                                       join reg in _context.Regions on u.RegionId equals reg.RegionId
                                       join c in _context.Companies on u.CompanyId equals c.CompanyId
-                                      where u.Email == username && u.PasswordHash == password
+                                      where u.Email== username && u.PasswordHash == incomingHash
                                       select new
                                       {
                                           u.UserId,
@@ -97,9 +141,11 @@ namespace BusinessLayer.Implementations
                                           CompanyName = c.CompanyName,
                                           roleId=u.RoleId,
                                           companyId=u.CompanyId,
-                                          regionId=u.RegionId
-                                      })
+                                          regionId=u.RegionId,
+                                          mustChangePassword = mustChangePassword                                      })
                                      .FirstOrDefaultAsync();
+
+               
 
                 return userData;
             }
@@ -113,6 +159,34 @@ namespace BusinessLayer.Implementations
                 Console.WriteLine($"Error verifying login: {ex.Message}");
                 return null;
             }
+        }
+
+     
+
+
+        public async Task<ApiResponse<bool>> ChangePasswordAsync(PasswordChangeDto dto)
+        {
+            var user = await _context.Users
+                .Include(u => u.UserLoginStatus)
+                .FirstOrDefaultAsync(u => u.UserId == dto.UserId);
+
+            if (user == null)
+                return new ApiResponse<bool>(false, "User not found", false);
+
+            // Old password check only if NOT first login
+            if (!user.UserLoginStatus.MustChangePassword)
+            {
+                string oldHash = HashPassword(dto.OldPassword);
+                if (user.PasswordHash != oldHash)
+                    return new ApiResponse<bool>(false, "Old password is incorrect", false);
+            }
+
+            user.PasswordHash = HashPassword(dto.NewPassword);
+            user.UserLoginStatus.MustChangePassword = false;
+
+            await _context.SaveChangesAsync();
+
+            return new ApiResponse<bool>(true, "Password updated successfully", true);
         }
 
 
@@ -144,6 +218,8 @@ namespace BusinessLayer.Implementations
             return Convert.ToBase64String(bytes);
         }
 
+        
+//
         public async Task<DataAccessLayer.DBContext.User?> UpdateUserAsync(int id, DataAccessLayer.DBContext.User updatedUser)
         {
             var existingUser = await _context.Users.FindAsync(id);
@@ -278,6 +354,8 @@ namespace BusinessLayer.Implementations
                 Console.WriteLine($"Email sending failed: {ex.Message}");
             }
         }
+
+        
     }
 }
 

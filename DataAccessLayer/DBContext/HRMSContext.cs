@@ -109,6 +109,8 @@ public partial class HRMSContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<UserLoginStatus> UserLoginStatuses { get; set; }
+
     public virtual DbSet<VisaTypeMaster> VisaTypeMasters { get; set; }
 
     public virtual DbSet<WorkAuthStatusMaster> WorkAuthStatusMasters { get; set; }
@@ -1320,11 +1322,6 @@ public partial class HRMSContext : DbContext
             entity.Property(e => e.UploadPicPath)
                 .HasMaxLength(50)
                 .IsUnicode(false);
-            entity.HasOne<RaiseTicketApproval>()
-        .WithOne()
-        .HasForeignKey<RaiseTicketApproval>(a => a.RaiseTicketId)
-        .OnDelete(DeleteBehavior.Cascade);
-
         });
 
         modelBuilder.Entity<RaiseTicketApproval>(entity =>
@@ -1332,11 +1329,6 @@ public partial class HRMSContext : DbContext
             entity.HasKey(e => e.RaiseTicketApprovalId).HasName("PK__RaiseTicketApproval__1788CCAC45456CCE");
 
             entity.ToTable("RaiseTicketApproval", "UM");
-            entity.HasOne<RaiseTicket>()
-             .WithOne()
-             .HasForeignKey<RaiseTicketApproval>(a => a.RaiseTicketId)
-             .OnDelete(DeleteBehavior.Cascade);
-
 
             entity.Property(e => e.RaiseTicketApprovalId).HasColumnName("RaiseTicketApprovalID");
             entity.Property(e => e.CreatedDate).HasColumnType("datetime");
@@ -1494,6 +1486,23 @@ public partial class HRMSContext : DbContext
                 .HasForeignKey(d => d.RegionId)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__Users__RegionID__5812160E");
+        });
+
+        modelBuilder.Entity<UserLoginStatus>(entity =>
+        {
+            entity.HasKey(e => e.UserId).HasName("PK__UserLogi__1788CCAC47F419A4");
+
+            entity.ToTable("UserLoginStatus", "UM");
+
+            entity.Property(e => e.UserId)
+                .ValueGeneratedNever()
+                .HasColumnName("UserID");
+            entity.Property(e => e.MustChangePassword).HasDefaultValue(true);
+
+            entity.HasOne(d => d.User).WithOne(p => p.UserLoginStatus)
+                .HasForeignKey<UserLoginStatus>(d => d.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__UserLogin__UserI__55BFB948");
         });
 
         modelBuilder.Entity<VisaTypeMaster>(entity =>
