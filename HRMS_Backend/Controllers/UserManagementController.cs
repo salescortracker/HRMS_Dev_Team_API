@@ -1,4 +1,5 @@
 ﻿using BusinessLayer.DTOs;
+using BusinessLayer.Implementations;
 using BusinessLayer.Interfaces;
 using DataAccessLayer.DBContext;
 using Microsoft.AspNetCore.Identity.Data;
@@ -21,8 +22,9 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
+        private readonly ICountryService _countryService;
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, ICountryService countryService)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -30,6 +32,7 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
+            _countryService = countryService;
         }
         public class BulkInsertRequest
         {
@@ -125,7 +128,7 @@ namespace HRMS_Backend.Controllers
         /// <returns></returns>
         /// 
         [HttpDelete("DeleteCompany/{id}")]
-       
+
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _companyService.DeleteCompanyAsync(id);
@@ -195,7 +198,7 @@ namespace HRMS_Backend.Controllers
                         });
 
                     // Add more entity cases as needed
-                    
+
 
                     default:
                         return BadRequest(new { Success = false, Message = "Unsupported entity type." });
@@ -320,7 +323,7 @@ namespace HRMS_Backend.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.UserId }, createdUser);
         }
 
-      
+
 
         [HttpPut("UpdateUser/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
@@ -368,7 +371,7 @@ namespace HRMS_Backend.Controllers
         /// </summary>
         [HttpGet("GetAllMenus")]
         public async Task<IActionResult> GetAllMenus()
-       {
+        {
             var menus = await _menuService.GetAllMenusAsync();
             return Ok(menus);
         }
@@ -606,5 +609,57 @@ namespace HRMS_Backend.Controllers
         #endregion
 
 
+        #region  Country Controller
+
+        [HttpGet("GetAllCountries")]
+        public async Task<IActionResult> GetAllCountries()
+        {
+            var countries = await _countryService.GetAllCountriesAsync();
+            return Ok(countries);
+        }
+
+        [HttpGet("GetCountryById/{id}")]
+        public async Task<IActionResult> GetCountryById(int id)
+        {
+            var country = await _countryService.GetCountryByIdAsync(id);
+            if (country == null) return NotFound("Country not found");
+            return Ok(country);
+        }
+        [HttpPost("SaveCountry")]
+        public async Task<IActionResult> SaveCountry([FromForm] CountryDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _countryService.SaveCountryAsync(dto);
+
+            return Ok(new { success = result, message = "Country saved successfully" });
+        }
+
+
+        [HttpPost("UpdateCountry")]
+        public async Task<IActionResult> UpdateCountry([FromForm] CountryDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            var result = await _countryService.UpdateCountryAsync(dto);
+            if (result)
+                return Ok("Country updated successfully");
+
+            return NotFound("Country not found");
+        }
+
+        [HttpPost("DeleteCountry/{id}")]
+        public async Task<IActionResult> DeleteCountry(int id)
+        {
+            var result = await _countryService.DeleteCountryAsync(id);
+            if (result)
+                return Ok("Country deleted successfully");
+
+            return NotFound("Country not found");
+        }
     }
+    #endregion
+
 }
