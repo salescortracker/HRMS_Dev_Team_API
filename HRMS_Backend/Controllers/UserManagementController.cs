@@ -22,10 +22,14 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
-        private readonly IStateService _stateService;
-        private readonly ICityService _cityService;
+        private readonly IEmployeeEducationService _employeeEducationService;
+        private readonly IEmployeeCertificationService _employeeCertificationService;
+        private readonly IEmployeeJobHistoryService _employeeJobHistoryService;
+        private readonly IWebHostEnvironment _env;
+
+
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IStateService stateService,ICityService cityService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IEmployeeEducationService employeeEducationService, IWebHostEnvironment env,IEmployeeCertificationService employeeCertificationService, IEmployeeJobHistoryService employeeJobHistoryService)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -33,8 +37,10 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
-            _stateService = stateService;
-            _cityService = cityService; 
+            _employeeEducationService = employeeEducationService;
+            _employeeCertificationService = employeeCertificationService;
+            _env = env;
+            _employeeJobHistoryService = employeeJobHistoryService;
         }
         public class BulkInsertRequest
         {
@@ -610,96 +616,399 @@ namespace HRMS_Backend.Controllers
         }
         #endregion
 
-        #region State Controller
-
-        [HttpPost("GetAllStates")]
-        public async Task<IActionResult> GetAllStates()
+        #region Employee Education
+        [HttpGet("education")]
+        public async Task<IActionResult> GetAllEducation()
         {
-            var result = await _stateService.GetAllStatesAsync();
+            var data = await _employeeEducationService.GetAllAsync();
+            return Ok(data);
+        }
+
+  
+        [HttpGet("user/{userId}/education")]
+        public async Task<IActionResult> GetEducationByUserId(int userId)
+        {
+            var result = await _employeeEducationService.GetByUserIdAsync(userId);
+
+            // Return empty list instead of 404
+            if (result == null || !result.Any())
+                return Ok(new List<EmployeeEducationDto>());
+
             return Ok(result);
         }
 
-        [HttpPost("GetActiveStates")]
-        public async Task<IActionResult> GetActiveStates()
+
+
+        [HttpGet("education/{id}")]
+        public async Task<IActionResult> GetEducationById(int id)
         {
-            var result = await _stateService.GetActiveStatesAsync();
-            return Ok(result);
+            var data = await _employeeEducationService.GetByIdAsync(id);
+            if (data == null)
+                return NotFound(new { message = "Education not found" });
+
+            return Ok(data);
         }
 
-        [HttpPost("GetStateById")]
-        public async Task<IActionResult> GetStateById([FromForm] int stateId)
+        [HttpPost("education")]
+        public async Task<IActionResult> AddEducation([FromForm] EmployeeEducationDto model)
         {
-            var result = await _stateService.GetStateByIdAsync(stateId);
-            if (result == null) return NotFound();
-            return Ok(result);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+
+            string path = Path.Combine(root, "Uploads", "EmployeeEducationCertificates");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            if (model.CertificateFile != null && model.CertificateFile.Length > 0)
+            {
+                string fileName = $"{Guid.NewGuid()}_{model.CertificateFile.FileName}";
+                string fullPath = Path.Combine(path, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.CertificateFile.CopyToAsync(stream);
+
+                model.CertificateFilePath = $"Uploads/EmployeeEducationCertificates/{fileName}";
+            }
+
+            model.CreatedBy = model.UserId;
+
+            var id = await _employeeEducationService.AddAsync(model);
+
+            return Ok(new { message = "Saved successfully", id });
         }
 
-        [HttpPost("CreateState")]
-        public async Task<IActionResult> CreateState([FromForm] StateDto stateDto)
+        [HttpPut("education/{id}")]
+        public async Task<IActionResult> UpdateEducation(int id, [FromForm] EmployeeEducationDto model)
         {
-            var result = await _stateService.CreateStateAsync(stateDto);
-            return Ok(result);
+            if (id != model.EducationId)
+                return BadRequest("Id mismatch");
+
+             string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+
+            string path = Path.Combine(root, "Uploads", "EmployeeEducationCertificates");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            if (model.CertificateFile != null && model.CertificateFile.Length > 0)
+            {
+                string fileName = $"{Guid.NewGuid()}_{model.CertificateFile.FileName}";
+                string fullPath = Path.Combine(path, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.CertificateFile.CopyToAsync(stream);
+
+                model.CertificateFilePath = $"Uploads/EmployeeEducationCertificates/{fileName}";
+            }
+
+            model.CreatedBy = model.UserId;
+            model.ModifiedBy = model.UserId;
+
+            var result = await _employeeEducationService.UpdateAsync(model);
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Updated successfully" });
         }
 
-        [HttpPost("UpdateState")]
-        public async Task<IActionResult> UpdateState([FromForm] StateDto stateDto)
+        [HttpDelete("education/{id}")]
+        public async Task<IActionResult> DeleteEducation(int id)
         {
-            var result = await _stateService.UpdateStateAsync(stateDto);
-            return Ok(result);
+            var result = await _employeeEducationService.DeleteAsync(id);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Deleted successfully" });
         }
 
-        [HttpPost("DeleteState")]
-        public async Task<IActionResult> DeleteState([FromForm] int stateId)
+        [HttpGet("modeofstudy")]
+        public async Task<IActionResult> GetModeOfStudy()
         {
-            var result = await _stateService.DeleteStateAsync(stateId);
-            return Ok(result);
+            var data = await _employeeEducationService.GetModeOfStudyListAsync();
+            return Ok(data);
         }
 
         #endregion
 
-        #region City Controller
+        #region Employee Certifications
 
-        [HttpPost("GetAllCities")]
-        public async Task<IActionResult> GetAllCities()
+        /// <summary>
+        /// Retrieves all employee certifications.
+        /// </summary>
+        /// <returns>A list of EmployeeCertificationDto objects.</returns>
+        [HttpGet("certifications")]
+        public async Task<IActionResult> GetAllCertifications()
         {
-            var cities = await _cityService.GetAllCitiesAsync();
-            return Ok(cities);
+            var data = await _employeeCertificationService.GetAllAsync();
+            return Ok(data);
         }
 
-        [HttpPost("GetActiveCities")]
-        public async Task<IActionResult> GetActiveCities()
+        /// <summary>
+        /// Retrieves certifications for a specific user.
+        /// </summary>
+        /// <param name="userId">The user ID to filter certifications.</param>
+        /// <returns>A list of EmployeeCertificationDto objects for the given user.</returns>
+        [HttpGet("user/{userId}/certifications")]
+        public async Task<IActionResult> GetUserCertifications(int userId)
         {
-            var cities = await _cityService.GetActiveCitiesAsync();
-            return Ok(cities);
+            if (userId <= 0)
+                return BadRequest(new { message = "Invalid userId" });
+
+            var data = await _employeeCertificationService.GetByUserIdAsync(userId);
+
+            if (data == null || !data.Any())
+                return NotFound(new { message = "No certifications found" });
+
+            return Ok(data);
         }
 
-        [HttpPost("GetCityById")]
-        public async Task<IActionResult> GetCityById([FromForm] int cityId)
+        /// <summary>
+        /// Retrieves a certification by its ID.
+        /// </summary>
+        /// <param name="id">The certification ID.</param>
+        /// <returns>An EmployeeCertificationDto object if found.</returns>
+        [HttpGet("certifications/{id}")]
+        public async Task<IActionResult> GetCertificationById(int id)
         {
-            var city = await _cityService.GetCityByIdAsync(cityId);
-            if (city == null) return NotFound();
-            return Ok(city);
+            var data = await _employeeCertificationService.GetByIdAsync(id);
+            if (data == null)
+                return NotFound(new { message = "Certification not found" });
+
+            return Ok(data);
         }
 
-        [HttpPost("CreateCity")]
-        public async Task<IActionResult> CreateCity([FromForm] CityDto dto)
+        /// <summary>
+        /// Adds a new employee certification.
+        /// </summary>
+        /// <param name="model">The EmployeeCertificationDto object containing certification details and file.</param>
+        /// <returns>The ID of the newly created certification.</returns>
+        [HttpPost("certifications")]
+        public async Task<IActionResult> AddCertification([FromForm] EmployeeCertificationDto model)
         {
-            var result = await _cityService.CreateCityAsync(dto);
-            return Ok(result);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string path = Path.Combine(root, "Uploads", "EmployeeCertifications");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            if (model.DocumentFile != null && model.DocumentFile.Length > 0)
+            {
+                string fileName = $"{Guid.NewGuid()}_{model.DocumentFile.FileName}";
+                string fullPath = Path.Combine(path, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.DocumentFile.CopyToAsync(stream);
+
+                model.DocumentPath = $"Uploads/EmployeeCertifications/{fileName}";
+            }
+            model.CreatedBy = model.UserId;
+
+            var id = await _employeeCertificationService.AddAsync(model);
+            return Ok(new { message = "Saved successfully", id });
         }
 
-        [HttpPost("UpdateCity")]
-        public async Task<IActionResult> UpdateCity([FromForm] CityDto dto)
+        /// <summary>
+        /// Updates an existing employee certification.
+        /// </summary>
+        /// <param name="id">The certification ID.</param>
+        /// <param name="model">The EmployeeCertificationDto object containing updated details and file.</param>
+        /// <returns>A success message if updated.</returns>
+        [HttpPut("certifications/{id}")]
+        public async Task<IActionResult> UpdateCertification(int id, [FromForm] EmployeeCertificationDto model)
         {
-            var result = await _cityService.UpdateCityAsync(dto);
-            return Ok(result);
+            if (id != model.CertificationId)
+                return BadRequest("Id mismatch");
+
+            string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string path = Path.Combine(root, "Uploads", "EmployeeCertifications");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            if (model.DocumentFile != null && model.DocumentFile.Length > 0)
+            {
+                string fileName = $"{Guid.NewGuid()}_{model.DocumentFile.FileName}";
+                string fullPath = Path.Combine(path, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.DocumentFile.CopyToAsync(stream);
+
+                model.DocumentPath = $"Uploads/EmployeeCertifications/{fileName}";
+            }
+
+            model.ModifiedBy = model.UserId;
+
+            var result = await _employeeCertificationService.UpdateAsync(model);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Updated successfully" });
         }
 
-        [HttpPost("DeleteCity")]
-        public async Task<IActionResult> DeleteCity([FromForm] int cityId)
+        /// <summary>
+        /// Deletes an employee certification by ID.
+        /// </summary>
+        /// <param name="id">The certification ID.</param>
+        /// <returns>A success message if deleted.</returns>
+        [HttpDelete("certifications/{id}")]
+        public async Task<IActionResult> DeleteCertification(int id)
         {
-            var result = await _cityService.DeleteCityAsync(cityId);
-            return Ok(result);
+            var result = await _employeeCertificationService.DeleteAsync(id);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Deleted successfully" });
+        }
+
+        /// <summary>
+        /// Retrieves all active certification types.
+        /// </summary>
+        /// <returns>A list of CertificationTypeDto objects.</returns>
+        [HttpGet("certificationtypes")]
+        public async Task<IActionResult> GetCertificationTypes()
+        {
+            var data = await _employeeCertificationService.GetCertificationTypesAsync();
+            return Ok(data);
+        }
+
+        #endregion
+
+
+        #region Employee Job History
+
+        /// <summary>
+        /// Get all employee job history records
+        /// </summary>
+        [HttpGet("jobhistory")]
+        public async Task<IActionResult> GetAllJobHistory()
+        {
+            var data = await _employeeJobHistoryService.GetAllAsync();
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Get job history records for a specific user
+        /// </summary>
+        [HttpGet("user/{userId}/jobhistory")]
+        public async Task<IActionResult> GetUserJobHistory(int userId)
+        {
+            if (userId <= 0)
+                return BadRequest(new { message = "Invalid userId" });
+
+            var data = await _employeeJobHistoryService.GetByUserIdAsync(userId);
+
+            if (data == null || !data.Any())
+                return NotFound(new { message = "No job history found" });
+
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Get a single job history record by ID
+        /// </summary>
+        [HttpGet("jobhistory/{id}")]
+        public async Task<IActionResult> GetJobHistoryById(int id)
+        {
+            var data = await _employeeJobHistoryService.GetByIdAsync(id);
+
+            if (data == null)
+                return NotFound(new { message = "Job history not found" });
+
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Add a new job history entry
+        /// </summary>
+        [HttpPost("jobhistory")]
+        public async Task<IActionResult> AddJobHistory([FromForm] EmployeeJobHistoryDto model)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string path = Path.Combine(root, "Uploads", "EmployeeJobHistoryDocuments");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            // File upload
+            if (model.UploadDocument != null && model.UploadDocument.Length > 0)
+            {
+                string fileName = $"{Guid.NewGuid()}_{model.UploadDocument.FileName}";
+                string fullPath = Path.Combine(path, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.UploadDocument.CopyToAsync(stream);
+
+                model.UploadDocumentPath = $"Uploads/EmployeeJobHistoryDocuments/{fileName}";
+            }
+
+            model.CreatedBy = model.UserId;
+
+            var id = await _employeeJobHistoryService.AddAsync(model);
+
+            return Ok(new { message = "Saved successfully", id });
+        }
+
+        /// <summary>
+        /// Update an existing job history entry
+        /// </summary>
+        [HttpPut("jobhistory/{id}")]
+        public async Task<IActionResult> UpdateJobHistory(int id, [FromForm] EmployeeJobHistoryDto model)
+        {
+            if (id != model.Id)
+                return BadRequest(new { message = "Id mismatch" });
+
+            string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string path = Path.Combine(root, "Uploads", "EmployeeJobHistoryDocuments");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            // File upload logic
+            if (model.UploadDocument != null && model.UploadDocument.Length > 0)
+            {
+                string fileName = $"{Guid.NewGuid()}_{model.UploadDocument.FileName}";
+                string fullPath = Path.Combine(path, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.UploadDocument.CopyToAsync(stream);
+
+                model.UploadDocumentPath = $"Uploads/EmployeeJobHistoryDocuments/{fileName}";
+            }
+
+            model.ModifiedBy = model.UserId;
+
+            var result = await _employeeJobHistoryService.UpdateAsync(model);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Updated successfully" });
+        }
+
+        /// <summary>
+        /// Delete a job history record
+        /// </summary>
+        [HttpDelete("jobhistory/{id}")]
+        public async Task<IActionResult> DeleteJobHistory(int id)
+        {
+            var result = await _employeeJobHistoryService.DeleteAsync(id);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Deleted successfully" });
         }
 
         #endregion
