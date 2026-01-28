@@ -42,6 +42,8 @@ builder.Services.AddScoped<IEmployeeResignationService, EmployeeResignationServi
 
 
 builder.Services.AddControllers();
+builder.Services.AddScoped<IStateService, StateService>();
+builder.Services.AddScoped<ICityService, CityService>();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
