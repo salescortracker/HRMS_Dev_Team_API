@@ -1,4 +1,5 @@
 ﻿using BusinessLayer.DTOs;
+using BusinessLayer.Implementations;
 using BusinessLayer.Interfaces;
 using DataAccessLayer.DBContext;
 using Microsoft.AspNetCore.Identity.Data;
@@ -21,8 +22,10 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
+        private readonly IStateService _stateService;
+        private readonly ICityService _cityService;
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
-            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService)
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IStateService stateService,ICityService cityService)
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -30,6 +33,8 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
+            _stateService = stateService;
+            _cityService = cityService; 
         }
         public class BulkInsertRequest
         {
@@ -125,7 +130,7 @@ namespace HRMS_Backend.Controllers
         /// <returns></returns>
         /// 
         [HttpDelete("DeleteCompany/{id}")]
-       
+
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _companyService.DeleteCompanyAsync(id);
@@ -195,7 +200,7 @@ namespace HRMS_Backend.Controllers
                         });
 
                     // Add more entity cases as needed
-                    
+
 
                     default:
                         return BadRequest(new { Success = false, Message = "Unsupported entity type." });
@@ -320,7 +325,7 @@ namespace HRMS_Backend.Controllers
             return CreatedAtAction(nameof(GetUserById), new { id = createdUser.UserId }, createdUser);
         }
 
-      
+
 
         [HttpPut("UpdateUser/{id}")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
@@ -368,7 +373,7 @@ namespace HRMS_Backend.Controllers
         /// </summary>
         [HttpGet("GetAllMenus")]
         public async Task<IActionResult> GetAllMenus()
-       {
+        {
             var menus = await _menuService.GetAllMenusAsync();
             return Ok(menus);
         }
@@ -605,6 +610,99 @@ namespace HRMS_Backend.Controllers
         }
         #endregion
 
+        #region State Controller
+
+        [HttpPost("GetAllStates")]
+        public async Task<IActionResult> GetAllStates()
+        {
+            var result = await _stateService.GetAllStatesAsync();
+            return Ok(result);
+        }
+
+        [HttpPost("GetActiveStates")]
+        public async Task<IActionResult> GetActiveStates()
+        {
+            var result = await _stateService.GetActiveStatesAsync();
+            return Ok(result);
+        }
+
+        [HttpPost("GetStateById")]
+        public async Task<IActionResult> GetStateById([FromForm] int stateId)
+        {
+            var result = await _stateService.GetStateByIdAsync(stateId);
+            if (result == null) return NotFound();
+            return Ok(result);
+        }
+
+        [HttpPost("CreateState")]
+        public async Task<IActionResult> CreateState([FromForm] StateDto stateDto)
+        {
+            var result = await _stateService.CreateStateAsync(stateDto);
+            return Ok(result);
+        }
+
+        [HttpPost("UpdateState")]
+        public async Task<IActionResult> UpdateState([FromForm] StateDto stateDto)
+        {
+            var result = await _stateService.UpdateStateAsync(stateDto);
+            return Ok(result);
+        }
+
+        [HttpPost("DeleteState")]
+        public async Task<IActionResult> DeleteState([FromForm] int stateId)
+        {
+            var result = await _stateService.DeleteStateAsync(stateId);
+            return Ok(result);
+        }
+
+        #endregion
+
+        #region City Controller
+
+        [HttpPost("GetAllCities")]
+        public async Task<IActionResult> GetAllCities()
+        {
+            var cities = await _cityService.GetAllCitiesAsync();
+            return Ok(cities);
+        }
+
+        [HttpPost("GetActiveCities")]
+        public async Task<IActionResult> GetActiveCities()
+        {
+            var cities = await _cityService.GetActiveCitiesAsync();
+            return Ok(cities);
+        }
+
+        [HttpPost("GetCityById")]
+        public async Task<IActionResult> GetCityById([FromForm] int cityId)
+        {
+            var city = await _cityService.GetCityByIdAsync(cityId);
+            if (city == null) return NotFound();
+            return Ok(city);
+        }
+
+        [HttpPost("CreateCity")]
+        public async Task<IActionResult> CreateCity([FromForm] CityDto dto)
+        {
+            var result = await _cityService.CreateCityAsync(dto);
+            return Ok(result);
+        }
+
+        [HttpPost("UpdateCity")]
+        public async Task<IActionResult> UpdateCity([FromForm] CityDto dto)
+        {
+            var result = await _cityService.UpdateCityAsync(dto);
+            return Ok(result);
+        }
+
+        [HttpPost("DeleteCity")]
+        public async Task<IActionResult> DeleteCity([FromForm] int cityId)
+        {
+            var result = await _cityService.DeleteCityAsync(cityId);
+            return Ok(result);
+        }
+
+        #endregion
 
     }
 }
