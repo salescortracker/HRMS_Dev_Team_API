@@ -278,6 +278,21 @@ namespace BusinessLayer.Implementations
                 Console.WriteLine($"Email sending failed: {ex.Message}");
             }
         }
+
+
+
+        public async Task<List<UserDropdownDto>> GetUsersByReportingTo(int reportingTo)
+        {
+            return await _context.Users
+                .Where(x => x.ReportingTo == reportingTo)
+                .Select(x => new UserDropdownDto
+                {
+                    UserId = x.UserId,
+                    EmployeeCode = x.EmployeeCode,
+                    FullName = x.FullName
+                })
+                .ToListAsync();
+        }
     }
 }
 

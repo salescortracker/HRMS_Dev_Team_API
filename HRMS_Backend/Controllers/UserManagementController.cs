@@ -372,7 +372,15 @@ namespace HRMS_Backend.Controllers
             }
         }
 
+        [HttpGet("users-by-reporting/{reportingTo}")]
+        public async Task<IActionResult> GetUsersByReporting(int reportingTo)
+        {
+            var result = await _userService.GetUsersByReportingTo(reportingTo);
+            return Ok(result);
+        }
+
         #endregion
+
         #region Menu Master Details
         /// <summary>
         /// Get all menus
