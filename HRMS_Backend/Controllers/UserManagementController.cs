@@ -22,14 +22,26 @@ namespace HRMS_Backend.Controllers
         private readonly IMenuMasterService _menuService;
         private readonly IRoleMasterService _roleService;
         private readonly IMenuRoleService _menuRoleService;
-        private readonly IEmployeeEducationService _employeeEducationService;
+
+        private readonly IEmployeeFamilyService _employeeFamilyService;
+        private readonly IEmployeeEmergencyContactService _employeeEmergencyContactService;
+        private readonly IEmployeeReferenceService _employeeReferenceService;
+        private readonly IEmployeePersonalService _employeePersonalService;
+
+      private readonly IEmployeeEducationService _employeeEducationService;
         private readonly IEmployeeCertificationService _employeeCertificationService;
         private readonly IEmployeeJobHistoryService _employeeJobHistoryService;
+
         private readonly IWebHostEnvironment _env;
 
 
         public UserManagementController(ICompanyService companyService, IRegionService regionService, IUserService userService
+
+            , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IEmployeeFamilyService employeeFamilyService, IEmployeeEmergencyContactService employeeEmergencyContactService, IEmployeeReferenceService employeeReferenceService
+            , IEmployeePersonalService employeePersonalService, IWebHostEnvironment env)
+
             , IMenuMasterService menuService, IRoleMasterService roleService, IMenuRoleService menuRoleService, IEmployeeEducationService employeeEducationService, IWebHostEnvironment env,IEmployeeCertificationService employeeCertificationService, IEmployeeJobHistoryService employeeJobHistoryService)
+
         {
             _companyService = companyService;
             _regionService = regionService;
@@ -37,10 +49,18 @@ namespace HRMS_Backend.Controllers
             _menuService = menuService;
             _roleService = roleService;
             _menuRoleService = menuRoleService;
+
+            _employeeFamilyService = employeeFamilyService;
+            _employeeEmergencyContactService = employeeEmergencyContactService;
+            _employeeReferenceService = employeeReferenceService;
+            _employeePersonalService = employeePersonalService;
+            _env = env;
+
             _employeeEducationService = employeeEducationService;
             _employeeCertificationService = employeeCertificationService;
             _env = env;
             _employeeJobHistoryService = employeeJobHistoryService;
+
         }
         public class BulkInsertRequest
         {
@@ -616,6 +636,47 @@ namespace HRMS_Backend.Controllers
         }
         #endregion
 
+
+        #region Employee Family Details
+
+        /// <summary>
+        /// Get all employee family records
+        /// </summary>
+        [HttpGet("family")]
+        public async Task<IActionResult> GetAllFamily()
+        {
+            var data = await _employeeFamilyService.GetAllAsync();
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Get family records for a specific user
+        /// </summary>
+        [HttpGet("user/{userId}/family")]
+        public async Task<IActionResult> GetUserFamily(int userId)
+        {
+            if (userId <= 0)
+                return BadRequest(new { message = "Invalid userId" });
+
+            var data = await _employeeFamilyService.GetByUserIdAsync(userId);
+
+            if (data == null || !data.Any())
+                return NotFound(new { message = "No family details found" });
+
+            return Ok(data);
+        }
+
+        /// <summary>
+        /// Get a single family record by ID
+        /// </summary>
+        [HttpGet("family/{id}")]
+        public async Task<IActionResult> GetFamilyById(int id)
+        {
+            var data = await _employeeFamilyService.GetByIdAsync(id);
+
+            if (data == null)
+                return NotFound(new { message = "Family record not found" });
+
         #region Employee Education
         [HttpGet("education")]
         public async Task<IActionResult> GetAllEducation()
@@ -646,14 +707,29 @@ namespace HRMS_Backend.Controllers
             if (data == null)
                 return NotFound(new { message = "Education not found" });
 
+
             return Ok(data);
         }
 
+
+        /// <summary>
+        /// Add a new family entry
+        /// </summary>
+        [HttpPost("family")]
+        public async Task<IActionResult> AddFamily([FromBody] EmployeeFamilyDto model)
+
         [HttpPost("education")]
         public async Task<IActionResult> AddEducation([FromForm] EmployeeEducationDto model)
+
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+
+            // set created by (audit)
+            model.CreatedBy = model.CreatedBy == 0 && model.UserId.HasValue ? model.UserId.Value : model.CreatedBy;
+
+            var id = await _employeeFamilyService.AddAsync(model);
 
             string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
 
@@ -677,8 +753,24 @@ namespace HRMS_Backend.Controllers
 
             var id = await _employeeEducationService.AddAsync(model);
 
+
             return Ok(new { message = "Saved successfully", id });
         }
+
+
+        /// <summary>
+        /// Update an existing family entry
+        /// </summary>
+        [HttpPut("family/{id}")]
+        public async Task<IActionResult> UpdateFamily(int id, [FromBody] EmployeeFamilyDto model)
+        {
+            if (id != model.FamilyId)
+                return BadRequest(new { message = "Id mismatch" });
+
+            model.ModifiedBy = model.ModifiedBy == 0 && model.UserId.HasValue ? model.UserId.Value : model.ModifiedBy;
+
+            var result = await _employeeFamilyService.UpdateAsync(model);
+
 
         [HttpPut("education/{id}")]
         public async Task<IActionResult> UpdateEducation(int id, [FromForm] EmployeeEducationDto model)
@@ -708,16 +800,27 @@ namespace HRMS_Backend.Controllers
             model.ModifiedBy = model.UserId;
 
             var result = await _employeeEducationService.UpdateAsync(model);
+
             if (!result)
                 return NotFound(new { message = "Record not found" });
 
             return Ok(new { message = "Updated successfully" });
         }
 
+
+        /// <summary>
+        /// Delete a family record
+        /// </summary>
+        [HttpDelete("family/{id}")]
+        public async Task<IActionResult> DeleteFamily(int id)
+        {
+            var result = await _employeeFamilyService.DeleteAsync(id);
+
         [HttpDelete("education/{id}")]
         public async Task<IActionResult> DeleteEducation(int id)
         {
             var result = await _employeeEducationService.DeleteAsync(id);
+
 
             if (!result)
                 return NotFound(new { message = "Record not found" });
@@ -725,6 +828,38 @@ namespace HRMS_Backend.Controllers
             return Ok(new { message = "Deleted successfully" });
         }
 
+        /// <summary>
+        /// Get relationship list for dropdowns
+        /// </summary>
+        [HttpGet("relationships")]
+        public async Task<IActionResult> GetRelationships()
+        {
+            var list = await _employeeFamilyService.GetRelationshipListAsync();
+            return Ok(list);
+        }
+
+        /// <summary>
+        /// Get gender list for dropdown
+        /// </summary>
+        [HttpGet("genders")]
+        public async Task<IActionResult> GetGenders()
+        {
+            var list = await _employeeFamilyService.GetGenderListAsync();
+            return Ok(list);
+        }
+
+
+        #endregion
+
+        #region Employee Emergency Contact Details
+
+        /// <summary>
+        /// Get all emergency contact records
+        /// </summary>
+        [HttpGet("emergency-contact")]
+        public async Task<IActionResult> GetAllEmergencyContacts()
+        {
+            var data = await _employeeEmergencyContactService.GetAllAsync();
         [HttpGet("modeofstudy")]
         public async Task<IActionResult> GetModeOfStudy()
         {
@@ -748,6 +883,10 @@ namespace HRMS_Backend.Controllers
         }
 
         /// <summary>
+        /// Get emergency contacts for a specific user
+        /// </summary>
+        [HttpGet("user/{userId}/emergency-contact")]
+        public async Task<IActionResult> GetUserEmergencyContacts(int userId)
         /// Retrieves certifications for a specific user.
         /// </summary>
         /// <param name="userId">The user ID to filter certifications.</param>
@@ -758,6 +897,10 @@ namespace HRMS_Backend.Controllers
             if (userId <= 0)
                 return BadRequest(new { message = "Invalid userId" });
 
+            var data = await _employeeEmergencyContactService.GetByUserIdAsync(userId);
+
+            if (data == null || !data.Any())
+                return NotFound(new { message = "No emergency contact details found" });
             var data = await _employeeCertificationService.GetByUserIdAsync(userId);
 
             if (data == null || !data.Any())
@@ -767,6 +910,15 @@ namespace HRMS_Backend.Controllers
         }
 
         /// <summary>
+        /// Get a single emergency contact record by ID
+        /// </summary>
+        [HttpGet("emergency-contact/{id}")]
+        public async Task<IActionResult> GetEmergencyContactById(int id)
+        {
+            var data = await _employeeEmergencyContactService.GetByIdAsync(id);
+
+            if (data == null)
+                return NotFound(new { message = "Emergency contact record not found" });
         /// Retrieves a certification by its ID.
         /// </summary>
         /// <param name="id">The certification ID.</param>
@@ -782,6 +934,10 @@ namespace HRMS_Backend.Controllers
         }
 
         /// <summary>
+        /// Add a new emergency contact entry
+        /// </summary>
+        [HttpPost("emergency-contact")]
+        public async Task<IActionResult> AddEmergencyContact([FromBody] EmployeeEmergencyContactDto model)
         /// Adds a new employee certification.
         /// </summary>
         /// <param name="model">The EmployeeCertificationDto object containing certification details and file.</param>
@@ -791,6 +947,12 @@ namespace HRMS_Backend.Controllers
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+
+            // Audit - createdBy
+            if (string.IsNullOrEmpty(model.CreatedBy) && model.UserId != 0)
+                model.CreatedBy = model.UserId.ToString();
+
+            var id = await _employeeEmergencyContactService.AddAsync(model);
 
             string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
             string path = Path.Combine(root, "Uploads", "EmployeeCertifications");
@@ -815,6 +977,19 @@ namespace HRMS_Backend.Controllers
         }
 
         /// <summary>
+        /// Update an existing emergency contact entry
+        /// </summary>
+        [HttpPut("emergency-contact/{id}")]
+        public async Task<IActionResult> UpdateEmergencyContact(int id, [FromBody] EmployeeEmergencyContactDto model)
+        {
+            if (id != model.EmergencyContactId)
+                return BadRequest(new { message = "Id mismatch" });
+
+            // Audit - modifiedBy
+            if (string.IsNullOrEmpty(model.ModifiedBy) && model.UserId != 0)
+                model.ModifiedBy = model.UserId.ToString();
+
+            var result = await _employeeEmergencyContactService.UpdateAsync(model);
         /// Updates an existing employee certification.
         /// </summary>
         /// <param name="id">The certification ID.</param>
@@ -854,6 +1029,12 @@ namespace HRMS_Backend.Controllers
         }
 
         /// <summary>
+        /// Delete an emergency contact record
+        /// </summary>
+        [HttpDelete("emergency-contact/{id}")]
+        public async Task<IActionResult> DeleteEmergencyContact(int id)
+        {
+            var result = await _employeeEmergencyContactService.DeleteAsync(id);
         /// Deletes an employee certification by ID.
         /// </summary>
         /// <param name="id">The certification ID.</param>
@@ -870,6 +1051,13 @@ namespace HRMS_Backend.Controllers
         }
 
         /// <summary>
+        /// Get relationship list for emergency contact dropdowns
+        /// </summary>
+        [HttpGet("emergency-contact/relationships")]
+        public async Task<IActionResult> GetEmergencyContactRelationships()
+        {
+            var list = await _employeeEmergencyContactService.GetRelationshipListAsync();
+            return Ok(list);
         /// Retrieves all active certification types.
         /// </summary>
         /// <returns>A list of CertificationTypeDto objects.</returns>
@@ -882,6 +1070,16 @@ namespace HRMS_Backend.Controllers
 
         #endregion
 
+        #region Employee References
+      
+
+        /// <summary>
+        /// Get all employee references
+        /// </summary>
+        [HttpGet("references")]
+        public async Task<IActionResult> GetAllReferences()
+        {
+            var data = await _employeeReferenceService.GetAllAsync();
 
         #region Employee Job History
 
@@ -896,6 +1094,10 @@ namespace HRMS_Backend.Controllers
         }
 
         /// <summary>
+        /// Get employee references for a specific user
+        /// </summary>
+        [HttpGet("user/{userId}/references")]
+        public async Task<IActionResult> GetReferencesByUser(int userId)
         /// Get job history records for a specific user
         /// </summary>
         [HttpGet("user/{userId}/jobhistory")]
@@ -904,6 +1106,10 @@ namespace HRMS_Backend.Controllers
             if (userId <= 0)
                 return BadRequest(new { message = "Invalid userId" });
 
+            var data = await _employeeReferenceService.GetByUserIdAsync(userId);
+
+            if (data == null || !data.Any())
+                return NotFound(new { message = "No reference records found" });
             var data = await _employeeJobHistoryService.GetByUserIdAsync(userId);
 
             if (data == null || !data.Any())
@@ -913,6 +1119,15 @@ namespace HRMS_Backend.Controllers
         }
 
         /// <summary>
+        /// Get a single employee reference by ID
+        /// </summary>
+        [HttpGet("references/{id}")]
+        public async Task<IActionResult> GetReferenceById(int id)
+        {
+            var data = await _employeeReferenceService.GetByIdAsync(id);
+
+            if (data == null)
+                return NotFound(new { message = "Reference record not found" });
         /// Get a single job history record by ID
         /// </summary>
         [HttpGet("jobhistory/{id}")]
@@ -927,6 +1142,160 @@ namespace HRMS_Backend.Controllers
         }
 
         /// <summary>
+        /// Create a new employee reference record
+        /// </summary>
+        [HttpPost("references")]
+        public async Task<IActionResult> AddReference([FromBody] EmployeeReferenceDto model)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            model.CreatedBy = (model.CreatedBy == null || model.CreatedBy == 0)
+                ? model.UserId
+                : model.CreatedBy;
+
+            var id = await _employeeReferenceService.AddAsync(model);
+
+            return Ok(new { message = "Saved successfully", id });
+        }
+
+        /// <summary>
+        /// Update an existing employee reference
+        /// </summary>
+        [HttpPut("references/{id}")]
+        public async Task<IActionResult> UpdateReference(int id, [FromBody] EmployeeReferenceDto model)
+        {
+            if (id != model.ReferenceId)
+                return BadRequest(new { message = "Id mismatch" });
+
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            model.ModifiedBy = (model.ModifiedBy == null || model.ModifiedBy == 0)
+                ? model.UserId
+                : model.ModifiedBy;
+
+            var result = await _employeeReferenceService.UpdateAsync(model);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Updated successfully" });
+        }
+
+        /// <summary>
+        /// Delete employee reference record
+        /// </summary>
+        [HttpDelete("references/{id}")]
+        public async Task<IActionResult> DeleteReference(int id)
+        {
+            var result = await _employeeReferenceService.DeleteAsync(id);
+
+            if (!result)
+                return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Deleted successfully" });
+        }
+
+        #endregion
+
+        // GET api/UserManagement/marital-statuses/active/names
+        [HttpGet("marital-statuses/active/names")]
+        public async Task<IActionResult> GetActiveMaritalStatusNames()
+        {
+            var names = await _employeeFamilyService.GetActiveNamesAsync();
+            return Ok(names); // returns string[] e.g. ["Single","Married"]
+        }
+
+        [HttpGet("personal")]
+        public async Task<IActionResult> GetAllPersonal()
+        {
+            var data = await _employeePersonalService.GetAllAsync();
+            return Ok(data);
+        }
+
+        [HttpGet("user/{userId}/personal")]
+        public async Task<IActionResult> GetPersonalByUser(int userId)
+        {
+            if (userId <= 0) return BadRequest(new { message = "Invalid userId" });
+
+            var data = await _employeePersonalService.GetByUserIdAsync(userId);
+            if (data == null || !data.Any()) return NotFound(new { message = "No personal details found" });
+
+            return Ok(data);
+        }
+
+        [HttpGet("personal/{id}")]
+        public async Task<IActionResult> GetPersonalById(int id)
+        {
+            var data = await _employeePersonalService.GetByIdAsync(id);
+            if (data == null) return NotFound(new { message = "Record not found" });
+            return Ok(data);
+        }
+
+        [HttpPost("personal")]
+        public async Task<IActionResult> AddPersonal([FromForm] EmployeePersonalDetailDto model)
+        {
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            string? profilePath = null;
+            if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
+            {
+                string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                string folder = Path.Combine(root, "Uploads", "EmployeeProfilePictures");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                string fileName = $"{Guid.NewGuid()}_{model.ProfilePicture.FileName}";
+                string fullPath = Path.Combine(folder, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.ProfilePicture.CopyToAsync(stream);
+
+                profilePath = $"Uploads/EmployeeProfilePictures/{fileName}";
+                model.ProfilePicturePath = profilePath;
+                model.ProfilePictureName = model.ProfilePicture.FileName;
+
+                // optional: populate base64 if you store in DB
+                // using var ms = new MemoryStream();
+                // await model.ProfilePicture.CopyToAsync(ms);
+                // model.ProfilePictureBase64 = Convert.ToBase64String(ms.ToArray());
+            }
+
+            model.CreatedBy = model.UserId;
+            model.CreatedAt = DateTime.Now;
+
+            var id = await _employeePersonalService.AddAsync(model);
+            return Ok(new { message = "Saved successfully", id });
+        }
+
+        [HttpPut("personal/{id}")]
+        public async Task<IActionResult> UpdatePersonal(int id, [FromForm] EmployeePersonalDetailDto model)
+        {
+            if (id != model.Id) return BadRequest(new { message = "Id mismatch" });
+
+            string? profilePath = null;
+            if (model.ProfilePicture != null && model.ProfilePicture.Length > 0)
+            {
+                string root = _env.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                string folder = Path.Combine(root, "Uploads", "EmployeeProfilePictures");
+                if (!Directory.Exists(folder)) Directory.CreateDirectory(folder);
+
+                string fileName = $"{Guid.NewGuid()}_{model.ProfilePicture.FileName}";
+                string fullPath = Path.Combine(folder, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await model.ProfilePicture.CopyToAsync(stream);
+
+                profilePath = $"Uploads/EmployeeProfilePictures/{fileName}";
+                model.ProfilePicturePath = profilePath;
+                model.ProfilePictureName = model.ProfilePicture.FileName;
+
+                // optional: base64 conversion similar to Add
+            }
+
+            model.ModifiedBy = model.UserId;
+            model.ModifiedAt = DateTime.Now;
+
+            var result = await _employeePersonalService.UpdateAsync(model);
+            if (!result) return NotFound(new { message = "Record not found" });
         /// Add a new job history entry
         /// </summary>
         [HttpPost("jobhistory")]
@@ -997,6 +1366,14 @@ namespace HRMS_Backend.Controllers
             return Ok(new { message = "Updated successfully" });
         }
 
+        [HttpDelete("personal/{id}")]
+        public async Task<IActionResult> DeletePersonal(int id)
+        {
+            var result = await _employeePersonalService.DeleteAsync(id);
+            if (!result) return NotFound(new { message = "Record not found" });
+
+            return Ok(new { message = "Deleted successfully" });
+        }
         /// <summary>
         /// Delete a job history record
         /// </summary>
@@ -1014,4 +1391,5 @@ namespace HRMS_Backend.Controllers
         #endregion
 
     }
+
 }
