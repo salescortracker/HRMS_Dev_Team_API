@@ -17,9 +17,11 @@ namespace HRMS_Backend.Controllers
         private readonly IWebHostEnvironment _env;
         private readonly ICategoryServicecs _categoryService;
         private readonly IBloodGroupService _bloodGroupService;
+        private readonly IResignationTypeService _resignationTypeService;
 
 
-        public MasterDataController(IDepartmentService service, IDesignationService designationService, IGenderService genderService, IBloodGroupService bloodGroupservice, ILogger<MasterDataController> logger, ICompanyNewsService companyNewsService, IWebHostEnvironment env, ICategoryServicecs categoryService,IBloodGroupService bloodGroupService)
+
+        public MasterDataController(IDepartmentService service, IResignationTypeService resignationTypeService,IDesignationService designationService, IGenderService genderService, IBloodGroupService bloodGroupservice, ILogger<MasterDataController> logger, ICompanyNewsService companyNewsService, IWebHostEnvironment env, ICategoryServicecs categoryService,IBloodGroupService bloodGroupService)
         {
             _service = service;
             _designationService = designationService;
@@ -29,6 +31,8 @@ namespace HRMS_Backend.Controllers
             _env = env;
             _bloodGroupService = bloodGroupservice; // ✅ MISSING LINE (VERY IMPORTANT)
             _categoryService = categoryService;
+            _resignationTypeService = resignationTypeService;
+
         }
         #region Departments
         // ✅ GET ALL (with optional filters later)
@@ -645,6 +649,32 @@ namespace HRMS_Backend.Controllers
         {
             var result = await _categoryService.GetAllPoliciesAsync();
             return Ok(result);
+        }
+
+        #endregion
+
+
+        #region resig
+
+        
+        [HttpGet("get")]
+        public IActionResult GetResignationTypes()
+        {
+            var result = _resignationTypeService.GetResignationTypes();
+            return Ok(result);
+        }
+
+        [HttpPost("submit")]
+        public IActionResult SubmitResignation([FromBody] EmployeeResignationDto dto)
+        {
+            _resignationTypeService.SubmitResignation(dto);
+            return Ok(new { message = "Resignation submitted successfully" });
+        }
+
+        [HttpGet("list/{employeeId}")]
+        public IActionResult GetEmployeeResignations(string employeeId)
+        {
+            return Ok(_resignationTypeService.GetEmployeeResignations(employeeId));
         }
 
         #endregion
