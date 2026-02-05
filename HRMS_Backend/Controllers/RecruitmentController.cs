@@ -4,6 +4,8 @@ using BusinessLayer.Implementations;
 using BusinessLayer.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
+
+
 namespace HRMS_Backend.Controllers
 {
     [Route("api/[controller]")]
@@ -11,14 +13,29 @@ namespace HRMS_Backend.Controllers
     public class RecruitmentController : ControllerBase
     {
         private readonly IRecruitmentService _service;
-      
+        
 
         public RecruitmentController(IRecruitmentService service)
         {
             _service = service;
            
         }
-       
+
+        [HttpPost("ParseResume")]
+        public async Task<IActionResult> ParseResume(IFormFile resume)
+        {
+            if (resume == null || resume.Length == 0)
+                return BadRequest("No file uploaded");
+
+            using var ms = new MemoryStream();
+            await resume.CopyToAsync(ms);
+            var bytes = ms.ToArray();
+
+            var parsed = ResumeParser.Parse(bytes, resume.FileName);
+
+            return Ok(parsed);
+        }
+
 
 
         [HttpPost("SaveCandidate")]
@@ -45,6 +62,19 @@ namespace HRMS_Backend.Controllers
             int id = await _service.SaveCandidateAsync(dto);
             return Ok(new { message = "Candidate saved successfully", candidateId = id });
         }
+        [HttpGet("DownloadResume/{fileName}")]
+        public IActionResult DownloadResume(string fileName)
+        {
+            string root = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string filePath = Path.Combine(root, "Uploads", "Resumes", fileName);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found");
+
+            var fileBytes = System.IO.File.ReadAllBytes(filePath);
+            return File(fileBytes, "application/octet-stream", fileName);
+        }
+
 
         // 🔹 GET CANDIDATES
         [HttpGet("GetCandidates/{userId}/{companyId}/{regionId}")]
@@ -64,12 +94,13 @@ namespace HRMS_Backend.Controllers
         }
 
         // 🔹 DELETE
-        [HttpDelete("DeleteCandidate/{candidateId}")]
-        public async Task<IActionResult> DeleteCandidate(int candidateId)
+        [HttpPost("DeleteCandidate")]
+        public async Task<IActionResult> DeleteCandidate([FromBody] int candidateId)
         {
             bool success = await _service.DeleteCandidateAsync(candidateId);
-            return success ? Ok() : BadRequest();
+            return success ? Ok(new { message = "Candidate deleted successfully" }) : BadRequest();
         }
+
 
         [HttpGet("GetCandidateById/{candidateId}")]
         public async Task<IActionResult> GetCandidateById(int candidateId)
@@ -77,27 +108,50 @@ namespace HRMS_Backend.Controllers
             var data = await _service.GetCandidateByIdAsync(candidateId);
             return data == null ? NotFound() : Ok(data);
         }
-        [HttpPut("UpdateCandidate")]
+        [HttpPost("UpdateCandidate")]
         public async Task<IActionResult> UpdateCandidate([FromForm] CandidateDto dto)
         {
-            var success = await _service.UpdateCandidateAsync(dto);
-            return success ? Ok() : BadRequest();
+            string root = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+            string path = Path.Combine(root, "Uploads", "Resumes");
+
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+
+            // 🔹 If new resume uploaded, replace old one
+            if (dto.ResumeFile != null && dto.ResumeFile.Length > 0)
+            {
+                string fileName = $"{Guid.NewGuid()}_{dto.ResumeFile.FileName}";
+                string fullPath = Path.Combine(path, fileName);
+
+                using var stream = new FileStream(fullPath, FileMode.Create);
+                await dto.ResumeFile.CopyToAsync(stream);
+
+                dto.FileName = fileName;
+                dto.FilePath = $"Uploads/Resumes/{fileName}";
+            }
+
+            bool success = await _service.UpdateCandidateAsync(dto);
+            return success ? Ok(new { message = "Candidate updated successfully" }) : BadRequest();
         }
 
 
-        [HttpGet("GetReferenceUsers/{companyId}/{regionId}")]
-        public async Task<IActionResult> GetReferenceUsers(int companyId, int regionId)
+
+        [HttpGet("GetReferenceUsers")]
+        public async Task<IActionResult> GetReferenceUsers()
         {
-            var data = await _service.GetReferenceUsersAsync(companyId, regionId);
+            var data = await _service.GetReferenceUsersAsync();
             return Ok(data);
         }
 
+       
+
+
         ///////////Screening////////
 
-        [HttpGet("GetRecruiters/{companyId}/{regionId}")]
-        public async Task<IActionResult> GetRecruiters(int companyId, int regionId)
+        [HttpGet("GetRecruiters")]
+        public async Task<IActionResult> GetRecruiters()
         {
-            var data = await _service.GetRecruitersAsync(companyId, regionId);
+            var data = await _service.GetRecruitersAsync();
             return Ok(data);
         }
         [HttpGet("GetScreeningCandidatesTopTable")]
@@ -114,7 +168,7 @@ string designation)
         }
 
 
-        [HttpPost("Save")]
+        [HttpPost("SaveCandidateScreening")]
         public async Task<IActionResult> SaveScreening(
 [FromBody] CandidateScreeningDto dto)
         {
@@ -131,7 +185,7 @@ string designation)
             var data = await _service.GetScreeningRecordsAsync(userId,companyId, regionId);
             return Ok(data);
         }
-        [HttpPut("UpdateScreening")]
+        [HttpPost("UpdateScreening")]
         public async Task<IActionResult> UpdateScreening([FromBody] CandidateScreeningDto dto)
         {
             var result = await _service.UpdateCandidateScreeningAsync(dto);
@@ -183,17 +237,13 @@ string designation)
             return Ok(new { message = "Interview updated successfully" });
         }
 
-        [HttpGet("GetAppointments/{companyId}/{regionId}/{interviewerId}")]
-        public async Task<IActionResult> GetAppointments(
-    int companyId,
-    int regionId,
-    int interviewerId)
+        /////Appoitment
+
+
+        [HttpGet("GetAppointments/{interviewerId}")]
+        public async Task<IActionResult> GetAppointments(int interviewerId)
         {
-            var data = await _service.GetAppointmentsForInterviewerAsync(
-                companyId,
-                regionId,
-                interviewerId
-            );
+            var data = await _service.GetAppointmentsForInterviewerAsync(interviewerId);
 
             return Ok(data);
         }
@@ -202,6 +252,89 @@ string designation)
         {
             var data = await _service.GetAppointmentCandidateDetailsAsync(candidateId);
             return data == null ? NotFound() : Ok(data);
+        }
+
+        ///////// Offer
+        [HttpGet("GetOfferCandidatesTopTable")]
+        public async Task<IActionResult> GetOfferCandidatesTopTable(
+int companyId,
+int regionId,
+string department,
+string designation)
+        {
+            var result = await _service
+                .GetOfferCandidatesTopTableAsync(companyId, regionId, department, designation);
+
+            return Ok(result);
+        }
+        [HttpPost("SaveCandidateOffer")]
+        public async Task<IActionResult> SaveCandidateOffer(
+    [FromBody] CandidateOfferDto dto)
+        {
+            var result = await _service.SaveCandidateOfferAsync(dto);
+
+            if (!result)
+                return BadRequest("Unable to save offer");
+
+            return Ok(new { message = "Offer saved successfully" });
+        }
+        [HttpGet("GetOfferRecords/{userId}/{companyId}/{regionId}")]
+        public async Task<IActionResult> GetOfferRecords(
+    int userId,
+    int companyId,
+    int regionId)
+        {
+            var data = await _service.GetOfferRecordsAsync(userId, companyId, regionId);
+            return Ok(data);
+        }
+
+        [HttpGet("GetHRUsers/{companyId}/{regionId}")]
+        public async Task<IActionResult> GetHRUsers(int companyId, int regionId)
+        {
+            var data = await _service.GetHRUsersAsync(companyId, regionId);
+            return Ok(data);
+        }
+
+        [HttpPost("SendOfferLetter/{offerId}")]
+        public async Task<IActionResult> SendOfferLetter(int offerId)
+        {
+            await _service.SendOfferLetterAsync(offerId);
+            return Ok(new { message = "Offer letter sent successfully" });
+        }
+
+        [HttpGet("DownloadOfferLetter/{offerId}")]
+        public async Task<IActionResult> DownloadOfferLetter(int offerId)
+        {
+            var (bytes, fileName) = await _service.DownloadOfferLetterAsync(offerId);
+            return File(bytes, "application/pdf", fileName);
+        }
+
+        /////////onboarding
+
+        [HttpGet("GetonboardingCandidatesTopTable")]
+        public async Task<IActionResult> getonboardingCandidatesTopTable(
+int companyId,
+int regionId,
+string department,
+string designation)
+        {
+            var result = await _service
+                .GetOnboardingCandidatesTopTableAsync(companyId, regionId, department, designation);
+
+            return Ok(result);
+        }
+
+        [HttpPost("SaveCandidateOnboarding")]
+        public async Task<IActionResult> SaveCandidateOnboarding([FromBody] CandidateOnboardingDTO dto)
+        {
+            int id = await _service.SaveCandidateOnboardingAsync(dto);
+            return Ok(new { message = "Onboarding saved successfully", onboardingId = id });
+        }
+        [HttpGet("GetOnboardedCandidates")]
+        public async Task<IActionResult> GetOnboardedCandidates(int companyId, int regionId)
+        {
+            var result = await _service.GetOnboardedCandidatesAsync(companyId, regionId);
+            return Ok(result);
         }
 
 

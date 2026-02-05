@@ -2,6 +2,7 @@
 {
     public class CandidateInterviewDto
     {
+        public int InterviewId { get; set; }
         public int RegionId { get; set; }
         public int CompanyId { get; set; }
         public int UserId { get; set; }
