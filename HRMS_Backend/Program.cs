@@ -33,6 +33,8 @@ builder.Services.AddScoped<IRoleMasterService, RoleMasterService>();
 builder.Services.AddScoped<IMenuRoleService, MenuRoleService>();
 builder.Services.AddScoped<IDepartmentService, DepartmentService>();
 builder.Services.AddScoped<IDesignationService, DesignationService>();
+builder.Services.AddScoped<IRecruitmentService, RecruitmentService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 builder.Services.AddScoped<IEmployeeEducationService, EmployeeEducationService>();
 builder.Services.AddScoped<IEmployeeCertificationService, EmployeeCertificationService>();
